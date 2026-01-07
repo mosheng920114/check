@@ -476,15 +476,13 @@
                   </td>
                   <td>${getStatusBadge(student._currentStatus)}</td>
                   <td>
-                      <div class="btn-group d-flex flex-wrap" role="group">
+                      <select class="form-select form-select-sm fw-bold ${getStatusColorClass(student._currentStatus)}" 
+                              onchange="updateStatus('${student.id}', this.value)" 
+                              style="min-width: 110px; cursor: pointer;">
                           ${currentStatuses.map(s => `
-                              <button type="button" 
-                                      class="btn btn-sm ${student._currentStatus === s ? 'btn-dark' : 'btn-outline-secondary'} m-1" 
-                                      onclick="updateStatus('${student.id}', '${s}')">
-                                  ${s}
-                              </button>
+                              <option value="${s}" ${student._currentStatus === s ? 'selected' : ''}>${s}</option>
                           `).join('')}
-                      </div>
+                      </select>
                   </td>
                   <td class="text-end">
                       <button class="btn btn-sm btn-light text-danger" onclick="removeStudent('${student.id}')"><i class="bi bi-trash"></i></button>
@@ -656,6 +654,13 @@
             if (status === "遲到") return '<span class="badge bg-warning text-dark">遲到</span>';
             if (status === "缺席") return '<span class="badge bg-danger">缺席</span>';
             return `<span class="badge bg-info text-dark">${status}</span>`;
+        }
+
+        function getStatusColorClass(status) {
+            if (!status || status === "實到") return "text-success border-success bg-white";
+            if (status === "缺席") return "text-danger border-danger bg-white";
+            if (status === "遲到") return "text-warning border-warning bg-white";
+            return "text-secondary border-secondary bg-white";
         }
 
         function renderStatusSettings() {
