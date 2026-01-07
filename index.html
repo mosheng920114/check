@@ -623,6 +623,7 @@
                 pendingRequests.push({ id: doc.id, ...doc.data() });
             });
             renderAll(); // Re-render when requests change
+            if (typeof updateNotificationBadge === 'function') updateNotificationBadge(); // Helper: Force badge update
         });
 
         function initWeekTabs() {
