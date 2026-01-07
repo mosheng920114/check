@@ -90,13 +90,13 @@
                 display: grid;
                 grid-template-columns: 1fr auto;
                 grid-template-rows: auto auto;
-                gap: 8px 10px;
-                margin-bottom: 10px;
+                gap: 0px 8px;
+                margin-bottom: 4px;
                 background: #fff;
                 border: 1px solid #efefef;
-                border-radius: 8px;
-                padding: 12px;
-                box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
+                border-radius: 6px;
+                padding: 6px 10px;
+                box-shadow: 0 1px 1px rgba(0, 0, 0, 0.02);
             }
 
             .table td {
@@ -473,8 +473,12 @@
                 let key = currentGroupMode === 'class' ? student.class : student.group;
                 if (!key) key = "未分組";
                 if (!grouped[key]) {
-                    grouped[key] = { students: [], stats: { total: 0, byStatus: {} } };
-                    currentStatuses.forEach(s => grouped[key].stats.byStatus[s] = 0);
+                    // Initialize group stats with names array
+                    grouped[key] = { students: [], stats: { total: 0, byStatus: {}, byStatusNames: {} } };
+                    currentStatuses.forEach(s => {
+                        grouped[key].stats.byStatus[s] = 0;
+                        grouped[key].stats.byStatusNames[s] = [];
+                    });
                 }
                 grouped[key].students.push(student);
 
@@ -485,7 +489,10 @@
                 student._currentStatus = status;
 
                 grouped[key].stats.total++;
-                if (grouped[key].stats.byStatus[status] !== undefined) grouped[key].stats.byStatus[status]++;
+                if (grouped[key].stats.byStatus[status] !== undefined) {
+                    grouped[key].stats.byStatus[status]++;
+                    grouped[key].stats.byStatusNames[status].push(student.name);
+                }
 
                 globalStats.total++;
                 if (globalStats.byStatus[status] !== undefined) {
@@ -535,9 +542,17 @@
                 const group = grouped[groupName];
                 let classStatStr = `應到: ${group.stats.total} | 實到: ${group.stats.byStatus['實到'] || 0}`;
 
+                // Generate class detail string
+                let classDetailHtml = "";
+                Object.entries(group.stats.byStatusNames).forEach(([status, names]) => {
+                    if (status !== '實到' && names.length > 0) {
+                        classDetailHtml += `<div class="text-end" style="font-size: 0.85rem;">${status}: ${names.length} (${names.join(' ')})</div>`;
+                    }
+                });
+
                 const rows = group.students.map(student => `
                     <tr>
-                        <td><span class="fw-bold text-primary">${student.name}</span><br><span class="badge bg-light text-secondary border">${student.class} / ${student.group || '-'}</span></td>
+                        <td><span class="fw-bold ${getNameColorClass(student._currentStatus)}">${student.name}</span><br><span class="badge bg-light text-secondary border">${student.class} / ${student.group || '-'}</span></td>
                         <td>${getStatusBadge(student._currentStatus)}</td>
                         <td>
                             <select class="form-select form-select-sm fw-bold ${getStatusColorClass(student._currentStatus)}" onchange="updateStatus('${student.id}', this.value)" style="min-width: 110px;">
@@ -551,8 +566,8 @@
                 const card = `
                     <div class="col-xl-6 col-12">
                         <div class="card shadow-sm border-0 h-100">
-                            <div class="class-header d-flex justify-content-between align-items-center">
-                                <div class="d-flex align-items-center">
+                            <div class="class-header d-flex justify-content-between align-items-start">
+                                <div class="d-flex align-items-center mt-1">
                                     <span class="fs-5 me-2"><i class="bi bi-house-door-fill me-2"></i>${groupName}</span>
                                     <div class="dropdown">
                                         <button class="btn btn-sm btn-link text-white p-0" type="button" data-bs-toggle="dropdown"><i class="bi bi-three-dots-vertical"></i></button>
@@ -562,7 +577,10 @@
                                         </ul>
                                     </div>
                                 </div>
-                                <span class="badge bg-light text-dark opacity-75 fw-normal fs-6">${classStatStr}</span>
+                                <div class="d-flex flex-column align-items-end">
+                                    <span class="badge bg-light text-dark opacity-75 fw-normal fs-6 mb-1">${classStatStr}</span>
+                                    <div class="text-white opacity-90">${classDetailHtml}</div>
+                                </div>
                             </div>
                             <div class="card-body p-0"><div class="table-responsive"><table class="table table-hover align-middle mb-0"><thead class="table-light"><tr><th style="width: 25%">姓名</th><th style="width: 15%">狀態</th><th>操作</th><th style="width: 10%"></th></tr></thead><tbody>${rows}</tbody></table></div></div>
                         </div>
@@ -632,6 +650,12 @@
             if (s === '缺席') return "text-danger border-danger bg-white";
             if (s === '遲到') return "text-warning border-warning bg-white";
             return "text-secondary border-secondary bg-white";
+        }
+        function getNameColorClass(s) {
+            if (!s || s === '實到') return "text-primary";
+            if (s === '缺席') return "text-danger fw-bolder";
+            if (s === '遲到') return "text-warning text-dark fw-bolder";
+            return "text-info fw-bolder";
         }
         function renderStatusSettings() {
             document.getElementById('statusListContainer').innerHTML = currentStatuses.map(s => `
