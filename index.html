@@ -140,8 +140,12 @@
                         onchange="setGroupBy('group')">
                     <label class="btn btn-outline-primary" for="groupByGroup">依組別</label>
                 </div>
-                <button class="btn btn-outline-secondary" data-bs-toggle="modal" data-bs-target="#settingsModal"><i
-                        class="bi bi-gear-fill"></i> 設定差勤</button>
+                <button class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#addStudentModal">
+                    <i class="bi bi-person-plus-fill"></i> 新增人員
+                </button>
+                <button class="btn btn-outline-secondary" data-bs-toggle="modal" data-bs-target="#settingsModal">
+                    <i class="bi bi-gear-fill"></i> 設定差勤
+                </button>
             </div>
         </div>
 
@@ -173,32 +177,7 @@
             </div>
         </div>
 
-        <div class="card shadow-sm mb-4 border-0" style="border-radius: 12px;">
-            <div class="card-body p-4">
-                <div class="d-flex justify-content-between align-items-center mb-3">
-                    <h5 class="card-title mb-0"><i class="bi bi-person-plus-fill"></i> 快速新增</h5>
-                    <button class="btn btn-outline-primary btn-sm" data-bs-toggle="modal"
-                        data-bs-target="#batchAddModal"><i class="bi bi-list-task"></i> 批量新增</button>
-                </div>
-                <div class="row g-3">
-                    <div class="col-md-3">
-                        <div class="form-floating"><input type="text" id="inputClass" class="form-control"
-                                placeholder="班級"><label for="inputClass">班級 (例: 101)</label></div>
-                    </div>
-                    <div class="col-md-3">
-                        <div class="form-floating"><input type="text" id="inputGroup" class="form-control"
-                                placeholder="組別"><label for="inputGroup">組別 (例: A組)</label></div>
-                    </div>
-                    <div class="col-md-4">
-                        <div class="form-floating"><input type="text" id="inputName" class="form-control"
-                                placeholder="姓名"><label for="inputName">姓名</label></div>
-                    </div>
-                    <div class="col-md-2 d-flex align-items-center"><button onclick="addStudent()"
-                            class="btn btn-primary btn-lg w-100 shadow-sm"><i class="bi bi-plus-lg"></i> 新增</button>
-                    </div>
-                </div>
-            </div>
-        </div>
+
 
         <div id="classContainer" class="row g-4">
             <div class="col-12 text-center py-5">
@@ -209,6 +188,39 @@
     </div>
 
     <!-- Modals -->
+    <div class="modal fade" id="addStudentModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">新增人員</h5>
+                    <button type="button" class="btn-primary btn-sm ms-auto me-2 btn" data-bs-toggle="modal"
+                        data-bs-target="#batchAddModal">批量新增</button>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="row g-3">
+                        <div class="col-6">
+                            <div class="form-floating"><input type="text" id="inputClass" class="form-control"
+                                    placeholder="班級"><label for="inputClass">班級 (例: 101)</label></div>
+                        </div>
+                        <div class="col-6">
+                            <div class="form-floating"><input type="text" id="inputGroup" class="form-control"
+                                    placeholder="組別"><label for="inputGroup">組別 (例: A組)</label></div>
+                        </div>
+                        <div class="col-12">
+                            <div class="form-floating"><input type="text" id="inputName" class="form-control"
+                                    placeholder="姓名"><label for="inputName">姓名</label></div>
+                        </div>
+                        <div class="col-12 text-end">
+                            <button onclick="addStudent()" class="btn btn-primary btn-lg w-100 shadow-sm"><i
+                                    class="bi bi-plus-lg"></i> 確定新增</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <div class="modal fade" id="settingsModal" tabindex="-1">
         <div class="modal-dialog">
             <div class="modal-content">
@@ -266,8 +278,8 @@
         const studentsRef = collection(db, "students");
         const configRef = doc(db, "settings", "globalConfig");
 
-        const sessions = ["早點名", "早上上餐廳", "0740集合", "中午上餐廳", "晚上上餐廳", "晚自習", "晚點名", "備用點名"];
-        const days = ["星期一", "星期二", "星期三", "星期四", "星期五", "星期六"];
+        const sessions = ["早點名", "早上上餐廳", "0740集合", "中午上餐廳", "1320集合", "晚上上餐廳", "晚自習", "晚點名", "備用點名"];
+        const days = ["星期一", "星期二", "星期三", "星期四", "星期五", "星期六", "星期日"];
 
         let currentSession = sessions[0];
         let currentDay = days[0];
