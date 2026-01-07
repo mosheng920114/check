@@ -146,49 +146,109 @@
                 gap: 5px;
             }
         }
+
+        /* New Scroll Container for Mobile Tabs */
+        .scroll-container {
+            display: flex;
+            overflow-x: auto;
+            white-space: nowrap;
+            -webkit-overflow-scrolling: touch;
+            padding-bottom: 5px;
+            margin-bottom: 10px;
+            gap: 8px;
+        }
+
+        .scroll-container::-webkit-scrollbar {
+            height: 4px;
+        }
+
+        .scroll-container::-webkit-scrollbar-thumb {
+            background-color: #ccc;
+            border-radius: 4px;
+        }
+
+        /* Header Optimization */
+        .header-actions {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        @media (max-width: 576px) {
+            .header-top {
+                flex-direction: column;
+                align-items: flex-start !important;
+            }
+
+            .header-actions {
+                width: 100%;
+                justify-content: space-between;
+                margin-top: 10px;
+            }
+
+            .header-actions .btn-group,
+            .header-actions .btn {
+                flex: 1;
+            }
+        }
     </style>
 </head>
 
-<body class="p-3">
-    <div class="container-fluid" style="max-width: 1400px;">
-        <div class="d-flex justify-content-between align-items-center mb-3">
-            <h2 class="fw-bold text-primary"><i class="bi bi-pencil-square"></i> 多人協作點名系統</h2>
-            <div class="d-flex align-items-center gap-3">
+<body class="bg-light">
+    <div class="container py-3" style="max-width: 800px;">
+        <!-- Top Bar -->
+        <div class="d-flex justify-content-between align-items-center mb-3 header-top">
+            <h2 class="fw-bold text-primary m-0 d-flex align-items-center">
+                <i class="bi bi-pencil-square me-2"></i>多人協作點名系統
+            </h2>
+            <div class="header-actions">
                 <div class="btn-group" role="group">
-                    <input type="radio" class="btn-check" name="groupBy" id="groupByClass" autocomplete="off" checked
+                    <input type="radio" class="btn-check" name="groupBy" id="groupByClass" value="class" checked
                         onchange="setGroupBy('class')">
                     <label class="btn btn-outline-primary" for="groupByClass">依班級</label>
-                    <input type="radio" class="btn-check" name="groupBy" id="groupByGroup" autocomplete="off"
+                    <input type="radio" class="btn-check" name="groupBy" id="groupByGroup" value="group"
                         onchange="setGroupBy('group')">
                     <label class="btn btn-outline-primary" for="groupByGroup">依組別</label>
                 </div>
                 <button class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#addStudentModal">
-                    <i class="bi bi-person-plus-fill"></i> 新增人員
+                    <i class="bi bi-person-plus-fill"></i> <span class="d-none d-sm-inline">新增</span>
                 </button>
                 <button class="btn btn-outline-secondary" data-bs-toggle="modal" data-bs-target="#settingsModal">
-                    <i class="bi bi-gear-fill"></i> 設定差勤
+                    <i class="bi bi-gear-fill"></i>
                 </button>
             </div>
         </div>
 
-        <div class="nav-scroller mb-2">
-            <nav class="nav nav-pills" id="weekTabs"></nav>
+        <!-- Week Tabs (Scrollable) -->
+        <div id="weekTabs" class="scroll-container mb-3">
+            <!-- JS Generated -->
         </div>
 
-        <div class="nav-scroller mb-3">
-            <nav class="nav nav-pills" id="sessionTabs"></nav>
+        <!-- Session Tabs (Scrollable) -->
+        <div id="sessionTabs" class="scroll-container mb-3">
+            <!-- JS Generated -->
         </div>
 
+        <!-- Search Bar -->
+        <div class="row mb-3 gx-2 align-items-center">
+            <div class="col">
+                <div class="input-group">
+                    <span class="input-group-text bg-white border-end-0"><i class="bi bi-search text-muted"></i></span>
+                    <input type="search" id="searchInput" class="form-control border-start-0" placeholder="搜尋學生姓名..."
+                        oninput="filterStudents()">
+                </div>
+            </div>
+        </div>
         <div class="row mb-4">
             <div class="col-12">
                 <div class="stat-card border-start border-5 border-primary">
                     <div class="row mb-3 align-items-center">
-                        <div class="col-md-6">
-                            <h5 class="mb-0">
-                                <button class="btn btn-outline-primary btn-sm me-2" onclick="copyGlobalReport()">
-                                    <i class="bi bi-clipboard"></i> 複製總覽(當下)
+                        <div class="col-12">
+                            <h5 class="mb-0 d-flex align-items-center flex-wrap">
+                                總覽 <small class="text-muted mx-2" id="currentSessionLabel"></small>
+                                <button class="btn btn-outline-primary btn-sm ms-auto" onclick="copyGlobalReport()">
+                                    <i class="bi bi-clipboard"></i> 複製總覽
                                 </button>
-                                總覽 <small class="text-muted" id="currentSessionLabel"></small>
                             </h5>
                         </div>
                     </div>
@@ -443,16 +503,17 @@
 
         function initWeekTabs() {
             const container = document.getElementById('weekTabs');
-            container.innerHTML = days.map(day => `
-                <a class="nav-link ${day === currentDay ? 'active' : ''} fw-bold" 
-                   href="#" onclick="changeDay('${day}')">${day}</a>
+            container.innerHTML = days.map(d => `
+                <button class="btn ${currentDay === d ? 'btn-primary' : 'btn-outline-secondary'} rounded-pill text-nowrap px-4" 
+                        onclick="changeDay('${d}')">${d}</button>
             `).join('');
         }
 
         function initSessionTabs() {
             const container = document.getElementById('sessionTabs');
-            container.innerHTML = sessions.map(session => `
-                <a class="nav-link ${session === currentSession ? 'active' : ''}" href="#" onclick="changeSession('${session}')">${session}</a>
+            container.innerHTML = sessions.map(s => `
+                <button class="btn ${currentSession === s ? 'btn-primary' : 'btn-white bg-white border'} rounded-pill text-nowrap px-3 shadow-sm" 
+                        onclick="changeSession('${s}')">${s}</button>
             `).join('');
         }
 
@@ -588,6 +649,11 @@
                 `;
                 container.innerHTML += card;
             });
+
+            // Re-apply search filter if exists
+            if (document.getElementById('searchInput').value.trim()) {
+                filterStudents();
+            }
         }
 
         window.changeDay = (day) => { currentDay = day; initWeekTabs(); renderAll(); };
@@ -635,9 +701,18 @@
         window.removeStatusType = async (val) => {
             if (confirm(`移除 ${val}?`)) await updateDoc(configRef, { statuses: currentStatuses.filter(s => s !== val) });
         };
+        // Export locally defined functions to global scope
         window.copyToClipboard = copyToClipboard;
         window.generateReportText = generateReportText;
+        window.filterStudents = filterStudents;
         window.copyGlobalReport = () => copyToClipboard(generateReportText('all', null, currentSession));
+
+        // Note: other functions like addStudent, removeStudent are already assigned to window directly above.
+
+        function setGroupBy(mode) {
+            currentGroupMode = mode;
+            renderAll();
+        }
 
         function getStatusBadge(s) {
             if (s === '實到') return '<span class="badge bg-success">實到</span>';
@@ -645,6 +720,34 @@
             if (s === '遲到') return '<span class="badge bg-warning text-dark">遲到</span>';
             return `<span class="badge bg-info text-dark">${s}</span>`;
         }
+        function filterStudents() {
+            const query = document.getElementById('searchInput').value.trim().toLowerCase();
+            const cards = document.querySelectorAll('.card'); // Each group/class is in a card
+
+            cards.forEach(card => {
+                const rows = card.querySelectorAll('tbody tr');
+                let hasVisibleStudent = false;
+
+                rows.forEach(row => {
+                    // Check all text in the row (Name, Class, Group, etc.)
+                    // This is simpler and robust for both mobile and desktop views
+                    if (row.textContent.toLowerCase().includes(query)) {
+                        row.style.display = ""; // Reset to default (table-row or grid)
+                        hasVisibleStudent = true;
+                    } else {
+                        row.style.setProperty('display', 'none', 'important'); // Force hide
+                    }
+                });
+
+                // If searching, hide empty groups.
+                if (hasVisibleStudent) {
+                    card.parentElement.style.display = "";
+                } else {
+                    card.parentElement.style.display = "none";
+                }
+            });
+        }
+
         function getStatusColorClass(s) {
             if (!s || s === '實到') return "text-success border-success bg-white";
             if (s === '缺席') return "text-danger border-danger bg-white";
@@ -660,6 +763,47 @@
                 <div class="custom-status-tag border rounded px-2 py-1 bg-light">${s} ${s !== '實到' ? `<span role="button" class="text-danger ms-2 fw-bold" onclick="removeStatusType('${s}')">&times;</span>` : ''}</div>
             `).join('');
         }
+
+        // Enable Drag to Scroll & Wheel to Scroll
+        function enableDragScroll(id) {
+            const slider = document.getElementById(id);
+            let isDown = false;
+            let startX;
+            let scrollLeft;
+
+            slider.addEventListener('mousedown', (e) => {
+                isDown = true;
+                slider.classList.add('active');
+                startX = e.pageX - slider.offsetLeft;
+                scrollLeft = slider.scrollLeft;
+            });
+            slider.addEventListener('mouseleave', () => {
+                isDown = false;
+                slider.classList.remove('active');
+            });
+            slider.addEventListener('mouseup', () => {
+                isDown = false;
+                slider.classList.remove('active');
+            });
+            slider.addEventListener('mousemove', (e) => {
+                if (!isDown) return;
+                e.preventDefault();
+                const x = e.pageX - slider.offsetLeft;
+                const walk = (x - startX) * 2; // Scroll-fast
+                slider.scrollLeft = scrollLeft - walk;
+            });
+            // Convert vertical wheel to horizontal scroll
+            slider.addEventListener('wheel', (e) => {
+                if (e.deltaY !== 0) {
+                    e.preventDefault();
+                    slider.scrollLeft += e.deltaY;
+                }
+            });
+        }
+
+        // Initialize scroll features
+        enableDragScroll('weekTabs');
+        enableDragScroll('sessionTabs');
     </script>
 </body>
 
