@@ -285,6 +285,80 @@
         </div>
     </div>
 
+    <!-- Login Modal (For Students) -->
+    <div class="modal fade" id="loginModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered modal-sm">
+            <div class="modal-content">
+                <div class="modal-header bg-primary text-white">
+                    <h5 class="modal-title" id="loginModalTitle">登入</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <p id="loginTargetName" class="fw-bold text-center fs-5 mb-3"></p>
+                    <input type="password" id="loginPassword" class="form-control text-center mb-3"
+                        placeholder="請輸入密碼 (預設0000)">
+                    <p id="loginError" class="text-danger small text-center mb-0"></p>
+                </div>
+                <div class="modal-footer justify-content-center">
+                    <button type="button" class="btn btn-primary w-100" onclick="performLogin()">登入</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Admin Login Modal -->
+    <div class="modal fade" id="adminLoginModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered modal-sm">
+            <div class="modal-content">
+                <div class="modal-header bg-dark text-white">
+                    <h5 class="modal-title"><i class="bi bi-shield-lock-fill me-2"></i>管理員登入</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <input type="text" id="adminUsername" class="form-control" placeholder="帳號">
+                    </div>
+                    <div class="mb-3">
+                        <input type="password" id="adminPassword" class="form-control" placeholder="密碼">
+                    </div>
+                    <p id="adminLoginError" class="text-danger small text-center mb-0"></p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-dark w-100" onclick="performAdminLogin()">登入</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Change Password Modal -->
+    <div class="modal fade" id="changePasswordModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">修改密碼</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label">舊密碼</label>
+                        <input type="password" id="oldPass" class="form-control">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">新密碼</label>
+                        <input type="password" id="newPass" class="form-control">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">確認新密碼</label>
+                        <input type="password" id="confirmPass" class="form-control">
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-primary" onclick="submitChangePassword()">確認修改</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
