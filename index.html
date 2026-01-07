@@ -825,6 +825,9 @@
                                         <ul class="dropdown-menu">
                                             <li><a class="dropdown-item" href="#" onclick="copyToClipboard(generateReportText('group', '${groupName}', '${currentSession}'))">複製本班 (當下時段)</a></li>
                                             <li><a class="dropdown-item" href="#" onclick="copyToClipboard(generateReportText('group', '${groupName}', null))">複製本班 (全部時段)</a></li>
+                                            <li><hr class="dropdown-divider"></li>
+                                            <li><a class="dropdown-item text-warning" href="#" onclick="resetStatus('current', '${groupName}')">重置本時段 (全實到)</a></li>
+                                            <li><a class="dropdown-item text-danger" href="#" onclick="resetStatus('day', '${groupName}')">重置整天 (全實到)</a></li>
                                         </ul>
                                     </div>
                                 </div>
@@ -997,6 +1000,89 @@
         };
         window.removeStatusType = async (val) => {
             if (confirm(`移除 ${val}?`)) await updateDoc(configRef, { statuses: currentStatuses.filter(s => s !== val) });
+        };
+
+        window.resetStatus = async (scope, groupName) => {
+            if (!currentUser) return alert("請先登入");
+
+            // Permission Check
+            let canReset = false;
+            if (currentUser.role === 'super_admin' || currentUser.role === 'general_admin') canReset = true;
+            if (currentUser.role === 'class_admin' && currentUser.class === groupName) {
+                const isDining = (currentSession === '中午上餐廳' || currentSession === '晚上上餐廳');
+                if (scope === 'day') {
+                    // Class Admin cannot reset 'day' because it includes dining sessions which they don't manage
+                    canReset = false;
+                } else {
+                    // Scope is current. Allow only if NOT dining.
+                    canReset = !isDining;
+                }
+            }
+            if (currentUser.role === 'group_admin' && currentUser.group === groupName) {
+                // Group admin logic: usually restricted to dining, but for "Reset" let's allow if it's their group?
+                // User asked for "Reset" on the 3 dots.
+                // Let's stick to the rule: Group Admin only valid for Dining Sessions?
+                // Or maybe just let them manage their group if they see the button.
+                // However, "Reset All Day" might be too powerful if they only manage dining.
+                // Let's restrict based on session for safety?
+                // The prompt didn't specify, but safer to follow general rules.
+                // Actually, "Reset All Day" implies modifying non-dining sessions.
+                // If Group Admin is restricted to Dining, they shouldn't reset "Morning Call".
+                // So "Reset All Day" should be BLOCKED for Group Admin if they are dining only.
+                // Let's allow simple logic for now: If they can edit the group, they can reset.
+                // But wait, group_admin logic in updateStatus was strict.
+                // Let's check updateStatus logic:
+                // Group Admin can edit IF isDining AND student.group == currentUser.group.
+                // So if scope is 'day', it touches non-dining. Thus Group Admin cannot 'day'.
+                if (scope === 'day') canReset = false;
+                else {
+                    // scope is 'current'. Is it dining?
+                    const isDining = (currentSession === '中午上餐廳' || currentSession === '晚上上餐廳');
+                    if (isDining) canReset = true;
+                }
+            }
+
+            if (!canReset) return alert("權限不足");
+
+            const label = scope === 'current' ? `本時段 (${currentSession})` : `今天 (${currentDay})`;
+            if (!confirm(`確定要將 ${groupName} 的 ${label} 所有差勤狀態重置為「實到」嗎？此操作無法復原。`)) return;
+
+            // Find target students
+            const targets = studentsData.filter(s => {
+                if (currentGroupMode === 'class') return s.class === groupName;
+                if (currentGroupMode === 'group') return s.group === groupName;
+                return false;
+            });
+
+            if (targets.length === 0) return alert("找不到學生資料");
+
+            let updateCount = 0;
+            const promises = [];
+
+            for (const s of targets) {
+                const updates = {};
+                if (scope === 'current') {
+                    const key = `${currentDay}_${currentSession}`;
+                    updates[`status.${key}`] = '實到';
+                } else {
+                    // All sessions for today
+                    sessions.forEach(sess => {
+                        const key = `${currentDay}_${sess}`;
+                        updates[`status.${key}`] = '實到';
+                    });
+                }
+                promises.push(updateDoc(doc(db, "students", s.id), updates));
+                updateCount++;
+            }
+
+            try {
+                await Promise.all(promises);
+                alert(`已重置 ${updateCount} 位學生的狀態。`);
+                renderAll(); // Should trigger automatically by snapshot but good to force
+            } catch (e) {
+                console.error(e);
+                alert("重置失敗: " + e.message);
+            }
         };
         // Export locally defined functions to global scope
         window.copyToClipboard = copyToClipboard;
