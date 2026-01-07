@@ -653,9 +653,7 @@
         }
         function getNameColorClass(s) {
             if (!s || s === '實到') return "text-primary";
-            if (s === '缺席') return "text-danger fw-bolder";
-            if (s === '遲到') return "text-warning text-dark fw-bolder";
-            return "text-info fw-bolder";
+            return "text-danger fw-bolder";
         }
         function renderStatusSettings() {
             document.getElementById('statusListContainer').innerHTML = currentStatuses.map(s => `
