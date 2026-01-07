@@ -145,6 +145,10 @@
             </div>
         </div>
 
+        <div class="nav-scroller mb-2">
+            <nav class="nav nav-pills" id="weekTabs"></nav>
+        </div>
+
         <div class="nav-scroller mb-3">
             <nav class="nav nav-pills" id="sessionTabs"></nav>
         </div>
@@ -155,11 +159,10 @@
                     <div class="row mb-3 align-items-center">
                         <div class="col-md-6">
                             <h5 class="mb-0">
-                                <button class="btn btn-outline-primary btn-sm me-2"
-                                    onclick="copyToClipboard(generateReportText('all', null, currentSession))">
+                                <button class="btn btn-outline-primary btn-sm me-2" onclick="copyGlobalReport()">
                                     <i class="bi bi-clipboard"></i> 複製總覽(當下)
                                 </button>
-                                总覽 <small class="text-muted" id="currentSessionLabel"></small>
+                                總覽 <small class="text-muted" id="currentSessionLabel"></small>
                             </h5>
                         </div>
                     </div>
@@ -264,26 +267,88 @@
         const configRef = doc(db, "settings", "globalConfig");
 
         const sessions = ["早點名", "早上上餐廳", "0740集合", "中午上餐廳", "晚上上餐廳", "晚自習", "晚點名", "備用點名"];
+        const days = ["星期一", "星期二", "星期三", "星期四", "星期五", "星期六"];
+
         let currentSession = sessions[0];
+        let currentDay = days[0];
         let currentGroupMode = "class";
         let currentStatuses = ["實到", "遲到", "缺席"];
         let studentsData = [];
 
+        // 初始化
+        initWeekTabs();
+        initSessionTabs();
+
         // 功能: 複製
         function copyToClipboard(text) {
-            navigator.clipboard.writeText(text).then(() => alert("已複製！")).catch(err => { console.error(err); alert("複製失敗"); });
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(text)
+                    .then(() => alert("已複製到剪貼簿！"))
+                    .catch(err => fallbackCopyTextToClipboard(text));
+            } else {
+                fallbackCopyTextToClipboard(text);
+            }
+        }
+
+        function fallbackCopyTextToClipboard(text) {
+            var textArea = document.createElement("textarea");
+            textArea.value = text;
+            textArea.style.top = "0";
+            textArea.style.left = "0";
+            textArea.style.position = "fixed";
+            document.body.appendChild(textArea);
+            textArea.focus();
+            textArea.select();
+            try {
+                var successful = document.execCommand('copy');
+                var msg = successful ? '已複製到剪貼簿！' : '複製失敗';
+                alert(msg);
+            } catch (err) {
+                console.error('Fallback: Oops, unable to copy', err);
+                alert("複製失敗 (瀏覽器不支援)");
+            }
+            document.body.removeChild(textArea);
+        }
+
+        function getStatusKey(session) {
+            return `${currentDay}_${session}`;
         }
 
         function generateReportText(scope, groupName = null, specifiedSession = null) {
             let output = "";
             const targetSessions = specifiedSession ? [specifiedSession] : sessions;
-            let targetGroups = [];
+
             if (scope === 'all') {
-                targetGroups = [...new Set(studentsData.map(s => currentGroupMode === 'class' ? s.class : (s.group || '未分組')))].sort();
-            } else {
-                targetGroups = [groupName];
+                targetSessions.forEach(session => {
+                    const statusKey = getStatusKey(session);
+                    const stats = { '實到': 0 };
+                    const detailList = {};
+                    currentStatuses.forEach(s => { if (s !== '實到') detailList[s] = []; });
+                    let total = 0;
+
+                    studentsData.forEach(s => {
+                        total++;
+                        const status = (s.status && s.status[statusKey]) ? s.status[statusKey] : '實到';
+                        if (status === '實到') stats['實到']++;
+                        else {
+                            if (!detailList[status]) detailList[status] = [];
+                            detailList[status].push(s.name);
+                        }
+                    });
+
+                    output += `應到:${total}\n`;
+                    output += `事故：\n`;
+                    Object.entries(detailList).forEach(([status, names]) => {
+                        if (names.length > 0) {
+                            output += `${status}${names.length} ${names.join(' ')}\n`;
+                        }
+                    });
+                    output += `實到：${stats['實到']}\n\n`;
+                });
+                return output;
             }
 
+            let targetGroups = [groupName];
             targetGroups.forEach(gName => {
                 output += `${gName}\n\n`;
                 targetSessions.forEach(session => {
@@ -293,12 +358,13 @@
                     });
                     if (groupStudents.length === 0) return;
                     const total = groupStudents.length;
+                    const statusKey = getStatusKey(session);
                     const stats = { '實到': 0 };
                     const detailList = {};
                     currentStatuses.forEach(s => { if (s !== '實到') detailList[s] = []; });
 
                     groupStudents.forEach(s => {
-                        const status = (s.status && s.status[session]) ? s.status[session] : '實到';
+                        const status = (s.status && s.status[statusKey]) ? s.status[statusKey] : '實到';
                         if (status === '實到') stats['實到']++;
                         else {
                             if (!detailList[status]) detailList[status] = [];
@@ -307,7 +373,6 @@
                     });
 
                     output += `${session}\n應到${total}\n事故：\n`;
-                    let hasAccident = false;
                     Object.entries(detailList).forEach(([status, names]) => {
                         if (names.length > 0) output += `${status}${names.length} ${names.join(' ')}\n`;
                     });
@@ -317,8 +382,6 @@
             });
             return output;
         }
-
-        initSessionTabs();
 
         onSnapshot(configRef, (docSnapshot) => {
             if (docSnapshot.exists()) {
@@ -344,6 +407,14 @@
             try { renderAll(); } catch (err) { console.error(err); }
         });
 
+        function initWeekTabs() {
+            const container = document.getElementById('weekTabs');
+            container.innerHTML = days.map(day => `
+                <a class="nav-link ${day === currentDay ? 'active' : ''} fw-bold" 
+                   href="#" onclick="changeDay('${day}')">${day}</a>
+            `).join('');
+        }
+
         function initSessionTabs() {
             const container = document.getElementById('sessionTabs');
             container.innerHTML = sessions.map(session => `
@@ -354,7 +425,7 @@
         function renderAll() {
             const container = document.getElementById('classContainer');
             const globalStatsPanel = document.getElementById('globalStatsPanel');
-            document.getElementById('currentSessionLabel').innerText = `(${currentSession})`;
+            document.getElementById('currentSessionLabel').innerText = `(${currentDay} - ${currentSession})`;
             container.innerHTML = ""; globalStatsPanel.innerHTML = "";
 
             const grouped = {};
@@ -370,8 +441,10 @@
                 }
                 grouped[key].students.push(student);
 
+                // Use Composite Key
+                const statusKey = getStatusKey(currentSession);
                 let status = "實到";
-                if (student.status && student.status[currentSession]) status = student.status[currentSession];
+                if (student.status && student.status[statusKey]) status = student.status[statusKey];
                 student._currentStatus = status;
 
                 grouped[key].stats.total++;
@@ -436,7 +509,7 @@
             });
         }
 
-        // Global Bindings
+        window.changeDay = (day) => { currentDay = day; initWeekTabs(); renderAll(); };
         window.changeSession = (n) => { currentSession = n; initSessionTabs(); renderAll(); };
         window.setGroupBy = (m) => { currentGroupMode = m; renderAll(); };
         window.addStudent = async () => {
@@ -468,7 +541,8 @@
             } catch (e) { console.error(e); alert("匯入失敗"); }
         };
         window.updateStatus = async (id, val) => {
-            await updateDoc(doc(db, "students", id), { [`status.${currentSession}`]: val });
+            const statusKey = getStatusKey(currentSession);
+            await updateDoc(doc(db, "students", id), { [`status.${statusKey}`]: val });
         };
         window.removeStudent = async (id) => { if (confirm('確定刪除？')) await deleteDoc(doc(db, "students", id)); };
         window.addNewStatusType = async () => {
@@ -482,6 +556,7 @@
         };
         window.copyToClipboard = copyToClipboard;
         window.generateReportText = generateReportText;
+        window.copyGlobalReport = () => copyToClipboard(generateReportText('all', null, currentSession));
 
         function getStatusBadge(s) {
             if (s === '實到') return '<span class="badge bg-success">實到</span>';
