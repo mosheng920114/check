@@ -589,7 +589,34 @@
             }
         }
 
-        window.changeDay = (day) => { currentDay = day; initWeekTabs(); renderAll(); };
+        window.migrateData = async () => {
+            if (!confirm('確定要執行資料遷移？這將為所有學生設定預設密碼 0000 與角色 student。')) return;
+            console.log("開始遷移資料...");
+            const snapshot = await getDocs(studentsRef);
+            let updateCount = 0;
+            const promises = [];
+            
+            snapshot.forEach(docSnap => {
+                const data = docSnap.data();
+                // Check if migration is needed
+                if (!data.password || !data.role) {
+                    promises.push(updateDoc(doc(db, "students", docSnap.id), {
+                        password: data.password || '0000',
+                        role: data.role || 'student'
+                    }));
+                    updateCount++;
+                }
+            });
+
+            try {
+                await Promise.all(promises);
+                console.log(`遷移完成！共更新 ${updateCount} 筆資料。`);
+                alert(`遷移完成！共更新 ${updateCount} 筆資料。`);
+            } catch (e) {
+                console.error("遷移失敗", e);
+                alert("遷移失敗，請查看 Console。");
+            }
+        };
         window.changeSession = (n) => { currentSession = n; initSessionTabs(); renderAll(); };
         window.setGroupBy = (m) => { currentGroupMode = m; renderAll(); };
         window.addStudent = async () => {
