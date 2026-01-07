@@ -77,74 +77,7 @@
                 border-radius: 12px 12px 0 0;
             }
 
-            .table thead {
-                display: none;
-            }
-
-            .table tbody {
-                display: block;
-                width: 100%;
-            }
-
-            .table tr {
-                display: grid;
-                grid-template-columns: 1fr auto;
-                grid-template-rows: auto auto;
-                gap: 0px 8px;
-                margin-bottom: 4px;
-                background: #fff;
-                border: 1px solid #efefef;
-                border-radius: 6px;
-                padding: 6px 10px;
-                box-shadow: 0 1px 1px rgba(0, 0, 0, 0.02);
-            }
-
-            .table td {
-                display: block;
-                border: none;
-                padding: 0;
-            }
-
-            /* 1. Name & Info (Top Left) */
-            .table td:nth-child(1) {
-                grid-column: 1;
-                grid-row: 1;
-                display: flex;
-                flex-direction: column;
-                justify-content: center;
-            }
-
-            /* 2. Status Badge (Hidden on mobile to save space, dropdown has color) */
-            .table td:nth-child(2) {
-                display: none;
-            }
-
-            /* 3. Dropdown (Bottom Row, Full Width) */
-            .table td:nth-child(3) {
-                grid-column: 1 / -1;
-                grid-row: 2;
-                margin-top: 5px;
-            }
-
-            /* 4. Delete Button (Top Right) */
-            .table td:nth-child(4) {
-                grid-column: 2;
-                grid-row: 1;
-                text-align: right;
-            }
-
-            /* Adjust internal spacing for name cell */
-            .table td:nth-child(1) .badge {
-                display: inline-block;
-                margin-top: 2px;
-                width: fit-content;
-            }
-
-            .btn-group {
-                display: flex;
-                flex-wrap: wrap;
-                gap: 5px;
-            }
+            /* Table styles removed to match desktop view */
         }
 
         /* New Scroll Container for Mobile Tabs */
@@ -199,7 +132,7 @@
         <!-- Top Bar -->
         <div class="d-flex justify-content-between align-items-center mb-3 header-top">
             <h2 class="fw-bold text-primary m-0 d-flex align-items-center">
-                <i class="bi bi-pencil-square me-2"></i>多人協作點名系統
+                <i class="bi bi-pencil-square me-2"></i>點名系統
             </h2>
             <div class="header-actions">
                 <div class="btn-group" role="group">
