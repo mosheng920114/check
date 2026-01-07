@@ -81,47 +81,69 @@
                 display: none;
             }
 
-            .table,
-            .table tbody,
-            .table tr,
-            .table td {
+            .table tbody {
                 display: block;
                 width: 100%;
             }
 
             .table tr {
-                margin-bottom: 15px;
+                display: grid;
+                grid-template-columns: 1fr auto;
+                grid-template-rows: auto auto;
+                gap: 8px 10px;
+                margin-bottom: 10px;
                 background: #fff;
-                border: 1px solid #eee;
+                border: 1px solid #efefef;
                 border-radius: 8px;
-                padding: 10px;
-                box-shadow: 0 2px 4px rgba(0, 0, 0, 0.02);
+                padding: 12px;
+                box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
             }
 
             .table td {
-                text-align: left;
-                padding: 8px 5px;
+                display: block;
                 border: none;
+                padding: 0;
             }
 
-            .table td:last-child {
-                border-top: 1px solid #f0f0f0;
+            /* 1. Name & Info (Top Left) */
+            .table td:nth-child(1) {
+                grid-column: 1;
+                grid-row: 1;
+                display: flex;
+                flex-direction: column;
+                justify-content: center;
+            }
+
+            /* 2. Status Badge (Hidden on mobile to save space, dropdown has color) */
+            .table td:nth-child(2) {
+                display: none;
+            }
+
+            /* 3. Dropdown (Bottom Row, Full Width) */
+            .table td:nth-child(3) {
+                grid-column: 1 / -1;
+                grid-row: 2;
                 margin-top: 5px;
-                padding-top: 10px;
+            }
+
+            /* 4. Delete Button (Top Right) */
+            .table td:nth-child(4) {
+                grid-column: 2;
+                grid-row: 1;
                 text-align: right;
+            }
+
+            /* Adjust internal spacing for name cell */
+            .table td:nth-child(1) .badge {
+                display: inline-block;
+                margin-top: 2px;
+                width: fit-content;
             }
 
             .btn-group {
                 display: flex;
                 flex-wrap: wrap;
                 gap: 5px;
-            }
-
-            .btn-group .btn {
-                flex: 1 1 auto;
-                margin: 0;
-                border-radius: 5px !important;
-                margin-bottom: 3px;
             }
         }
     </style>
@@ -441,8 +463,11 @@
             container.innerHTML = ""; globalStatsPanel.innerHTML = "";
 
             const grouped = {};
-            const globalStats = { total: 0, byStatus: {} };
-            currentStatuses.forEach(s => globalStats.byStatus[s] = 0);
+            const globalStats = { total: 0, byStatus: {}, byStatusNames: {} };
+            currentStatuses.forEach(s => {
+                globalStats.byStatus[s] = 0;
+                globalStats.byStatusNames[s] = [];
+            });
 
             studentsData.forEach(student => {
                 let key = currentGroupMode === 'class' ? student.class : student.group;
@@ -463,17 +488,43 @@
                 if (grouped[key].stats.byStatus[status] !== undefined) grouped[key].stats.byStatus[status]++;
 
                 globalStats.total++;
-                if (globalStats.byStatus[status] !== undefined) globalStats.byStatus[status]++;
+                if (globalStats.byStatus[status] !== undefined) {
+                    globalStats.byStatus[status]++;
+                    globalStats.byStatusNames[status].push(student.name);
+                }
             });
 
             // Global Stats
-            let globalStatsHtml = `<div class="d-flex align-items-baseline me-4"><span class="text-muted small me-2">應到總數</span><span class="fs-4 fw-bold text-dark">${globalStats.total}</span></div>`;
-            globalStatsHtml += `<div class="d-flex align-items-baseline me-4"><span class="text-muted small me-2">實到</span><span class="fs-4 fw-bold text-success">${globalStats.byStatus['實到'] || 0}</span></div>`;
+            let globalStatsHtml = `
+                <div class="d-flex align-items-center me-4 mb-2">
+                    <span class="text-muted small me-2">應到</span>
+                    <span class="fs-4 fw-bold text-dark">${globalStats.total}</span>
+                </div>
+                <div class="d-flex align-items-center me-4 mb-2">
+                    <span class="text-muted small me-2">實到</span>
+                    <span class="fs-4 fw-bold text-success">${globalStats.byStatus['實到'] || 0}</span>
+                </div>
+            `;
+
             let breakdownHtml = "";
-            Object.entries(globalStats.byStatus).forEach(([status, count]) => {
-                if (status !== '實到' && count > 0) breakdownHtml += `<span class="me-3 text-danger">${status}: <b>${count}</b></span>`;
+            Object.entries(globalStats.byStatusNames).forEach(([status, names]) => {
+                if (status !== '實到' && names.length > 0) {
+                    breakdownHtml += `
+                        <div class="mb-1">
+                            <span class="badge bg-light text-danger border border-danger me-1">${status} (${names.length})</span>
+                            <span class="small text-secondary">${names.join(', ')}</span>
+                        </div>
+                    `;
+                }
             });
-            globalStatsPanel.innerHTML = globalStatsHtml + `<div class="border-start ps-3 ms-2">${breakdownHtml}</div>`;
+
+            if (breakdownHtml) {
+                globalStatsHtml += `<div class="d-flex flex-column border-start ps-3 ms-2">${breakdownHtml}</div>`;
+            } else {
+                globalStatsHtml += `<div class="d-flex flex-column border-start ps-3 ms-2"><span class="text-muted small">全員實到</span></div>`;
+            }
+
+            globalStatsPanel.innerHTML = globalStatsHtml;
 
             if (Object.keys(grouped).length === 0) {
                 container.innerHTML = `<div class="col-12 text-center text-muted py-5">目前沒有資料，請從上方新增。</div>`;
