@@ -143,12 +143,24 @@
                         onchange="setGroupBy('group')">
                     <label class="btn btn-outline-primary" for="groupByGroup">依組別</label>
                 </div>
-                <button class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#addStudentModal">
-                    <i class="bi bi-person-plus-fill"></i> <span class="d-none d-sm-inline">新增</span>
-                </button>
-                <button class="btn btn-outline-secondary" data-bs-toggle="modal" data-bs-target="#settingsModal">
-                    <i class="bi bi-gear-fill"></i>
-                </button>
+                <!-- Right Side: Settings & Add -->
+                <div class="d-flex align-items-center">
+                    <button id="adminLoginBtn" class="btn btn-outline-primary me-2" onclick="showAdminLogin()"
+                        title="管理員登入">
+                        <i class="bi bi-key-fill"></i>
+                    </button>
+                    <div id="userInfoDisplay" class="d-none align-items-center me-2">
+                        <span id="userNameDisplay" class="fw-bold text-primary me-2"></span>
+                        <button class="btn btn-sm btn-outline-danger" onclick="logout()">登出</button>
+                    </div>
+
+                    <button class="btn btn-outline-primary me-2" onclick="showAddStudentModal()">
+                        <i class="bi bi-person-plus-fill me-1"></i>新增
+                    </button>
+                    <button class="btn btn-outline-secondary" data-bs-toggle="modal" data-bs-target="#settingsModal">
+                        <i class="bi bi-gear-fill"></i>
+                    </button>
+                </div>
             </div>
         </div>
 
@@ -301,6 +313,17 @@
         let currentGroupMode = "class";
         let currentStatuses = ["實到", "遲到", "缺席"];
         let studentsData = [];
+
+        let currentUser = null; // { id, name, role, class, group }
+        // Check session storage
+        try {
+            const storedUser = sessionStorage.getItem('currentUser');
+            if (storedUser) {
+                currentUser = JSON.parse(storedUser);
+            }
+        } catch (e) {
+            console.error("Session load error", e);
+        }
 
         // 初始化
         initWeekTabs();
@@ -544,18 +567,56 @@
                     }
                 });
 
-                const rows = group.students.map(student => `
+                const rows = group.students.map(student => {
+                    // Permission Check
+                    let canEdit = false;
+                    let canDelete = false;
+
+                    if (currentUser) {
+                        if (currentUser.role === 'super_admin') {
+                            canEdit = true;
+                            canDelete = true;
+                        } else if (currentUser.role === 'class_admin') {
+                            if (currentUser.class === student.class) { // Assuming class admin can edit their own class
+                                canEdit = true;
+                                canDelete = true;
+                            }
+                        } else if (currentUser.role === 'group_admin') {
+                            // Dining sessions: edit group members. Other times: only self
+                            const isDining = (currentSession === '中午上餐廳' || currentSession === '晚上上餐廳');
+                            if (isDining && student.group === currentUser.group) {
+                                canEdit = true;
+                            } else if (currentUser.id === student.id) {
+                                canEdit = true;
+                            }
+                        } else { // student
+                            if (currentUser.id === student.id) canEdit = true;
+                        }
+                    }
+
+                    // Onclick name: if not logged in, trigger login. If logged in but no edit, do nothing or show info.
+                    const nameAction = !currentUser ? `onclick="initLogin('${student.id}', '${student.name}')" style="cursor: pointer; text-decoration: underline;"` : '';
+
+                    return `
                     <tr>
-                        <td><span class="fw-bold ${getNameColorClass(student._currentStatus)}">${student.name}</span><br><span class="badge bg-light text-secondary border">${student.class} / ${student.group || '-'}</span></td>
+                        <td>
+                            <span class="fw-bold ${getNameColorClass(student._currentStatus)}" ${nameAction}>${student.name}</span>
+                            <br><span class="badge bg-light text-secondary border">${student.class} / ${student.group || '-'}</span>
+                        </td>
                         <td>${getStatusBadge(student._currentStatus)}</td>
                         <td>
-                            <select class="form-select form-select-sm fw-bold ${getStatusColorClass(student._currentStatus)}" onchange="updateStatus('${student.id}', this.value)" style="min-width: 110px;">
+                            <select class="form-select form-select-sm fw-bold ${getStatusColorClass(student._currentStatus)}" 
+                                    onchange="updateStatus('${student.id}', this.value)" 
+                                    style="min-width: 110px;"
+                                    ${canEdit ? '' : 'disabled'}>
                                 ${currentStatuses.map(s => `<option value="${s}" ${student._currentStatus === s ? 'selected' : ''}>${s}</option>`).join('')}
                             </select>
                         </td>
-                        <td class="text-end"><button class="btn btn-sm btn-light text-danger" onclick="removeStudent('${student.id}')"><i class="bi bi-trash"></i></button></td>
+                        <td class="text-end">
+                            ${canDelete ? `<button class="btn btn-sm btn-light text-danger" onclick="removeStudent('${student.id}')"><i class="bi bi-trash"></i></button>` : ''}
+                        </td>
                     </tr>
-                `).join('');
+                `}).join('');
 
                 const card = `
                     <div class="col-xl-6 col-12">
@@ -666,6 +727,143 @@
         window.generateReportText = generateReportText;
         window.filterStudents = filterStudents;
         window.copyGlobalReport = () => copyToClipboard(generateReportText('all', null, currentSession));
+
+        // --- Auth & Login Logic ---
+
+        // Update UI based on login status
+        function updateAuthUI() {
+            const adminLoginBtn = document.getElementById('adminLoginBtn');
+            const userInfoDisplay = document.getElementById('userInfoDisplay');
+            const userNameDisplay = document.getElementById('userNameDisplay');
+
+            if (currentUser) {
+                adminLoginBtn.classList.add('d-none');
+                userInfoDisplay.classList.remove('d-none');
+                userInfoDisplay.classList.add('d-flex');
+
+                let roleName = "學生";
+                if (currentUser.role === 'super_admin') roleName = "超級管理員";
+                else if (currentUser.role === 'class_admin') roleName = "實習班長";
+                else if (currentUser.role === 'group_admin') roleName = "組別班代";
+
+                userNameDisplay.innerHTML = `${currentUser.name} <span class="badge bg-secondary ms-1" style="font-size: 0.7em;">${roleName}</span>`;
+            } else {
+                adminLoginBtn.classList.remove('d-none');
+                userInfoDisplay.classList.add('d-none');
+                userInfoDisplay.classList.remove('d-flex');
+            }
+            renderAll(); // Re-render to update permissions
+        }
+
+        window.initLogin = (studentId, studentName) => {
+            if (currentUser) return; // Already logged in
+            document.getElementById('loginTargetName').innerText = `登入：${studentName}`;
+            document.getElementById('loginTargetName').dataset.id = studentId;
+            document.getElementById('loginPassword').value = '';
+            document.getElementById('loginError').innerText = '';
+            bootstrap.Modal.getOrCreateInstance(document.getElementById('loginModal')).show();
+        };
+
+        window.performLogin = async () => {
+            const studentId = document.getElementById('loginTargetName').dataset.id;
+            const password = document.getElementById('loginPassword').value;
+            // Find student data
+            const student = studentsData.find(s => s.id === studentId);
+            if (!student) return;
+
+            if (student.password === password) {
+                currentUser = {
+                    id: student.id,
+                    name: student.name,
+                    role: student.role || 'student',
+                    class: student.class,
+                    group: student.group
+                };
+                sessionStorage.setItem('currentUser', JSON.stringify(currentUser));
+                bootstrap.Modal.getOrCreateInstance(document.getElementById('loginModal')).hide();
+                updateAuthUI();
+                // Check if password is default
+                if (password === '0000') {
+                    setTimeout(() => {
+                        if (confirm("您目前使用預設密碼，建議立即修改。是否前往修改？")) {
+                            bootstrap.Modal.getOrCreateInstance(document.getElementById('changePasswordModal')).show();
+                        }
+                    }, 500);
+                }
+            } else {
+                document.getElementById('loginError').innerText = "密碼錯誤";
+            }
+        };
+
+        window.showAdminLogin = () => {
+            document.getElementById('adminUsername').value = '';
+            document.getElementById('adminPassword').value = '';
+            document.getElementById('adminLoginError').innerText = '';
+            bootstrap.Modal.getOrCreateInstance(document.getElementById('adminLoginModal')).show();
+        };
+
+        window.performAdminLogin = () => {
+            const u = document.getElementById('adminUsername').value;
+            const p = document.getElementById('adminPassword').value;
+            if (u === 'admin' && p === '31415926') {
+                currentUser = {
+                    id: 'super_admin_id',
+                    name: '管理員',
+                    role: 'super_admin'
+                };
+                sessionStorage.setItem('currentUser', JSON.stringify(currentUser));
+                bootstrap.Modal.getOrCreateInstance(document.getElementById('adminLoginModal')).hide();
+                updateAuthUI();
+            } else {
+                document.getElementById('adminLoginError').innerText = "帳號或密碼錯誤";
+            }
+        };
+
+        window.logout = () => {
+            currentUser = null;
+            sessionStorage.removeItem('currentUser');
+            updateAuthUI();
+        };
+
+        window.submitChangePassword = async () => {
+            if (!currentUser) return;
+            const oldPass = document.getElementById('oldPass').value;
+            const newPass = document.getElementById('newPass').value;
+            const confirmPass = document.getElementById('confirmPass').value;
+
+            if (newPass !== confirmPass) { alert("兩次新密碼輸入不一致"); return; }
+            if (newPass.length < 4) { alert("密碼太短，請至少輸入4位數"); return; }
+
+            // Super admin special update
+            if (currentUser.role === 'super_admin') {
+                alert("超級管理員密碼請由後台修改");
+                return;
+            }
+
+            // Verify old password by fetching latest data
+            const docRef = doc(db, "students", currentUser.id);
+            const docSnap = await getDocs(query(studentsRef)); // Inefficient but works, better to use getDoc if possible but we have studentsData
+            // Use local check first then overwrite
+            const student = studentsData.find(s => s.id === currentUser.id);
+            if (student.password !== oldPass) {
+                alert("舊密碼錯誤");
+                return;
+            }
+
+            try {
+                await updateDoc(docRef, { password: newPass });
+                alert("密碼修改成功！");
+                bootstrap.Modal.getOrCreateInstance(document.getElementById('changePasswordModal')).hide();
+            } catch (e) {
+                console.error(e);
+                alert("修改失敗");
+            }
+        };
+
+        // Initial check
+        window.addEventListener('load', () => {
+            updateAuthUI();
+        });
 
         // Note: other functions like addStudent, removeStudent are already assigned to window directly above.
 
