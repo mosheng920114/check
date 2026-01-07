@@ -135,27 +135,26 @@
                 <i class="bi bi-pencil-square me-2"></i>點名系統
             </h2>
             <div class="header-actions">
-                <div class="btn-group" role="group">
-                    <input type="radio" class="btn-check" name="groupBy" id="groupByClass" value="class" checked
-                        onchange="setGroupBy('class')">
-                    <label class="btn btn-outline-primary" for="groupByClass">依班級</label>
-                    <input type="radio" class="btn-check" name="groupBy" id="groupByGroup" value="group"
-                        onchange="setGroupBy('group')">
-                    <label class="btn btn-outline-primary" for="groupByGroup">依組別</label>
-                </div>
                 <!-- Right Side: Settings & Add -->
-                <div class="d-flex align-items-center">
-                    <button id="adminLoginBtn" class="btn btn-outline-primary me-2" onclick="showAdminLogin()"
+                <div class="d-flex align-items-center flex-wrap">
+                    <button id="adminLoginBtn" class="btn btn-outline-primary me-1 me-md-2" onclick="showAdminLogin()"
                         title="管理員登入">
                         <i class="bi bi-key-fill"></i>
                     </button>
-                    <div id="userInfoDisplay" class="d-none align-items-center me-2">
-                        <span id="userNameDisplay" class="fw-bold text-primary me-2"></span>
+                    <div id="userInfoDisplay" class="d-none align-items-center me-1 me-md-2">
+                        <span id="userNameDisplay" class="fw-bold text-primary me-1"></span>
                         <button class="btn btn-sm btn-outline-danger" onclick="logout()">登出</button>
                     </div>
 
-                    <button class="btn btn-outline-primary me-2" onclick="showAddStudentModal()">
-                        <i class="bi bi-person-plus-fill me-1"></i>新增
+                    <div class="btn-group me-1 me-md-2" role="group">
+                        <button class="btn btn-outline-primary px-2 px-md-3 text-nowrap"
+                            onclick="setGroupBy('class')">依班級</button>
+                        <button class="btn btn-outline-primary px-2 px-md-3 text-nowrap"
+                            onclick="setGroupBy('group')">依組別</button>
+                    </div>
+
+                    <button class="btn btn-outline-primary me-1 me-md-2" onclick="showAddStudentModal()">
+                        <i class="bi bi-person-plus-fill me-1"></i><span class="d-none d-sm-inline">新增</span>
                     </button>
                     <button class="btn btn-outline-secondary" data-bs-toggle="modal" data-bs-target="#settingsModal">
                         <i class="bi bi-gear-fill"></i>
@@ -275,7 +274,8 @@
                         data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body">
-                    <div class="alert alert-info small">格式：<strong>班級 組別 姓名</strong> (中間空白)<br>範例：<br>101 A組 王小明</div>
+                    <div class="alert alert-info small">格式：<strong>班級 組別 姓名</strong> (中間空白)<br>範例：<br>101 A組 王小明
+                    </div>
                     <textarea id="batchInput" class="form-control" rows="10" placeholder="101 A組 王小明"></textarea>
                 </div>
                 <div class="modal-footer"><button type="button" class="btn btn-secondary"
@@ -377,6 +377,7 @@
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
         const studentsRef = collection(db, "students");
+        const requestsRef = collection(db, "requests"); // New collection for approval requests
         const configRef = doc(db, "settings", "globalConfig");
 
         const sessions = ["早點名", "早上上餐廳", "0740集合", "中午上餐廳", "1320集合", "晚上上餐廳", "晚自習", "晚點名", "備用點名"];
@@ -386,7 +387,9 @@
         let currentDay = days[0];
         let currentGroupMode = "class";
         let currentStatuses = ["實到", "遲到", "缺席"];
+
         let studentsData = [];
+        let pendingRequests = []; // Store active requests
 
         let currentUser = null; // { id, name, role, class, group }
         // Check session storage
@@ -521,7 +524,7 @@
         });
 
         const q = query(studentsRef);
-        onSnapshot(q, (snapshot) => {
+        const unsubscribeStudents = onSnapshot(q, (snapshot) => {
             studentsData = [];
             snapshot.forEach((doc) => studentsData.push({ id: doc.id, ...doc.data() }));
             studentsData.sort((a, b) => {
@@ -529,6 +532,15 @@
                 return (a.timestamp?.seconds || 0) - (b.timestamp?.seconds || 0);
             });
             try { renderAll(); } catch (err) { console.error(err); }
+        });
+
+        const requestsQ = query(requestsRef);
+        const unsubscribeRequests = onSnapshot(requestsQ, (snapshot) => {
+            pendingRequests = [];
+            snapshot.forEach((doc) => {
+                pendingRequests.push({ id: doc.id, ...doc.data() });
+            });
+            renderAll(); // Re-render when requests change
         });
 
         function initWeekTabs() {
@@ -668,16 +680,34 @@
                         }
                     }
 
+                    // Check for Pending Requests
+                    const sessionKey = `${currentDay}_${currentSession}`;
+
+                    const pendingReq = pendingRequests.find(r =>
+                        r.studentId === student.id &&
+                        r.targetSession === sessionKey &&
+                        r.status === 'pending'
+                    );
+
+                    let statusDisplay = getStatusBadge(student._currentStatus);
+                    let rowStyle = "";
+
+                    if (pendingReq) {
+                        statusDisplay = `<span class="badge bg-warning text-dark">審核中: ${pendingReq.newStatus}</span>`;
+                        canEdit = false; // Lock editing while pending
+                        rowStyle = "background-color: #fff3cd;"; // Light yellow row
+                    }
+
                     // Onclick name: if not logged in, trigger login. If logged in but no edit, do nothing or show info.
                     const nameAction = !currentUser ? `onclick="initLogin('${student.id}', '${student.name}')" style="cursor: pointer; text-decoration: underline;"` : '';
 
                     return `
-                    <tr>
+                    <tr style="${rowStyle}">
                         <td>
                             <span class="fw-bold ${getNameColorClass(student._currentStatus)}" ${nameAction}>${student.name}</span>
                             <br><span class="badge bg-light text-secondary border">${student.class} / ${student.group || '-'}</span>
                         </td>
-                        <td>${getStatusBadge(student._currentStatus)}</td>
+                        <td>${statusDisplay}</td>
                         <td>
                             <select class="form-select form-select-sm fw-bold ${getStatusColorClass(student._currentStatus)}" 
                                     onchange="updateStatus('${student.id}', this.value)" 
@@ -783,8 +813,65 @@
             } catch (e) { console.error(e); alert("匯入失敗"); }
         };
         window.updateStatus = async (id, val) => {
+            if (!currentUser) return;
+
+            const student = studentsData.find(s => s.id === id);
+            if (!student) return;
+
+            let canDirectlyUpdate = false;
+
+            if (currentUser.role === 'super_admin') {
+                canDirectlyUpdate = true;
+            } else if (currentUser.role === 'class_admin') {
+                if (currentUser.class === student.class) canDirectlyUpdate = true;
+            } else if (currentUser.role === 'group_admin') {
+                // Dining sessions: edit group members. Other times: only self (but self needs request?)
+                // Plan: "Other times only can request for themselves". So Group Admin for others in non-dining = No.
+                // Group Admin for self in non-dining = Request (based on "Students submit requests").
+
+                const isDining = (currentSession === '中午上餐廳' || currentSession === '晚上上餐廳');
+                if (isDining && student.group === currentUser.group) {
+                    canDirectlyUpdate = true;
+                }
+                // Note: Self-update for students/admins outside their scope defaults to Request.
+            }
+
             const statusKey = getStatusKey(currentSession);
-            await updateDoc(doc(db, "students", id), { [`status.${statusKey}`]: val });
+
+            if (canDirectlyUpdate) {
+                try {
+                    const studentRef = doc(db, "students", id);
+                    await updateDoc(studentRef, { [`status.${statusKey}`]: val });
+                } catch (e) {
+                    console.error("Error updating status: ", e);
+                    alert("更新失敗: " + e.message);
+                }
+            } else {
+                // Create Request
+                try {
+                    await addDoc(requestsRef, {
+                        studentId: id,
+                        studentName: student.name,
+                        studentClass: student.class,
+                        studentGroup: student.group || '',
+                        targetSession: statusKey, // e.g. 星期一_早點名
+                        sessionName: currentSession,
+                        dayName: currentDay,
+                        originStatus: (student.status && student.status[statusKey]) ? student.status[statusKey] : '實到',
+                        newStatus: val,
+                        requesterId: currentUser.id,
+                        requesterName: currentUser.name,
+                        timestamp: new Date().toISOString(),
+                        status: 'pending' // pending, approved, rejected
+                    });
+                    alert("已送出狀態變更申請，請等待幹部審核。");
+                    // Reset select to original value visually (will be handled by re-render, but good specifically)
+                    renderAll();
+                } catch (e) {
+                    console.error("Error sending request: ", e);
+                    alert("送出申請失敗: " + e.message);
+                }
+            }
         };
         window.removeStudent = async (id) => { if (confirm('確定刪除？')) await deleteDoc(doc(db, "students", id)); };
         window.addNewStatusType = async () => {
