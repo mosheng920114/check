@@ -285,8 +285,8 @@
                         data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body">
-                    <div class="input-group mb-3"><input type="text" id="newStatusInput" class="form-control"
-                            placeholder="輸入新狀態名稱"><button class="btn btn-primary"
+                    <div id="addStatusContainer" class="input-group mb-3"><input type="text" id="newStatusInput"
+                            class="form-control" placeholder="輸入新狀態名稱"><button class="btn btn-primary"
                             onclick="addNewStatusType()">新增</button></div>
                     <hr>
                     <h6>目前可用狀態:</h6>
@@ -642,7 +642,7 @@
         }
 
         function renderAll() {
-            if (window.updateNotificationBadge && currentUser) {
+            if (currentUser && typeof updateNotificationBadge === 'function') {
                 try { updateNotificationBadge(); } catch (e) { }
             }
 
@@ -993,12 +993,14 @@
             if (confirm('確定刪除？')) await deleteDoc(doc(db, "students", id));
         };
         window.addNewStatusType = async () => {
+            if (!currentUser || !['super_admin', 'general_admin', 'class_admin', 'group_admin'].includes(currentUser.role)) return alert("權限不足");
             const val = document.getElementById('newStatusInput').value.trim();
             if (!val || currentStatuses.includes(val)) return;
             await updateDoc(configRef, { statuses: [...currentStatuses, val] });
             document.getElementById('newStatusInput').value = '';
         };
         window.removeStatusType = async (val) => {
+            if (!currentUser || !['super_admin', 'general_admin', 'class_admin', 'group_admin'].includes(currentUser.role)) return alert("權限不足");
             if (confirm(`移除 ${val}?`)) await updateDoc(configRef, { statuses: currentStatuses.filter(s => s !== val) });
         };
 
@@ -1152,6 +1154,7 @@
                 if (addStudentBtn) addStudentBtn.classList.add('d-none');
             }
             renderAll(); // Re-render to update permissions
+            renderStatusSettings(); // Re-render settings modal UI based on new permissions
         }
 
         window.showAdminDashboard = () => {
@@ -1513,8 +1516,16 @@
             return "text-danger fw-bolder";
         }
         function renderStatusSettings() {
+            const canManage = currentUser && ['super_admin', 'general_admin', 'class_admin', 'group_admin'].includes(currentUser.role);
+
+            const addContainer = document.getElementById('addStatusContainer');
+            if (addContainer) {
+                if (canManage) addContainer.classList.remove('d-none');
+                else addContainer.classList.add('d-none');
+            }
+
             document.getElementById('statusListContainer').innerHTML = currentStatuses.map(s => `
-                <div class="custom-status-tag border rounded px-2 py-1 bg-light">${s} ${s !== '實到' ? `<span role="button" class="text-danger ms-2 fw-bold" onclick="removeStatusType('${s}')">&times;</span>` : ''}</div>
+                <div class="custom-status-tag border rounded px-2 py-1 bg-light">${s} ${(s !== '實到' && canManage) ? `<span role="button" class="text-danger ms-2 fw-bold" onclick="removeStatusType('${s}')">&times;</span>` : ''}</div>
             `).join('');
         }
 
