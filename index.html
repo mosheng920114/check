@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>多人即時點名系統 (完整版)</title>
+    <title>多人協作點名系統</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     <style>
@@ -33,11 +33,6 @@
             font-weight: bold;
         }
 
-        .status-btn {
-            min-width: 60px;
-            margin: 2px;
-        }
-
         .floating-action {
             position: fixed;
             bottom: 30px;
@@ -56,7 +51,6 @@
             display: inline-block;
         }
 
-        /* Tabs Styling */
         .nav-pills .nav-link {
             border-radius: 20px;
             margin-right: 5px;
@@ -78,7 +72,6 @@
             padding-bottom: 10px;
         }
 
-        /* Mobile Optimization */
         @media (max-width: 768px) {
             .class-header {
                 border-radius: 12px 12px 0 0;
@@ -88,7 +81,6 @@
                 display: none;
             }
 
-            /* Hide table headers on mobile */
             .table,
             .table tbody,
             .table tr,
@@ -119,7 +111,6 @@
                 text-align: right;
             }
 
-            /* Responsive Buttons */
             .btn-group {
                 display: flex;
                 flex-wrap: wrap;
@@ -132,20 +123,12 @@
                 border-radius: 5px !important;
                 margin-bottom: 3px;
             }
-
-            .status-btn {
-                width: auto;
-                min-width: unset;
-                padding: 6px 12px;
-            }
         }
     </style>
 </head>
 
 <body class="p-3">
-
     <div class="container-fluid" style="max-width: 1400px;">
-        <!-- Header & Toggle -->
         <div class="d-flex justify-content-between align-items-center mb-3">
             <h2 class="fw-bold text-primary"><i class="bi bi-pencil-square"></i> 多人協作點名系統</h2>
             <div class="d-flex align-items-center gap-3">
@@ -153,30 +136,33 @@
                     <input type="radio" class="btn-check" name="groupBy" id="groupByClass" autocomplete="off" checked
                         onchange="setGroupBy('class')">
                     <label class="btn btn-outline-primary" for="groupByClass">依班級</label>
-
                     <input type="radio" class="btn-check" name="groupBy" id="groupByGroup" autocomplete="off"
                         onchange="setGroupBy('group')">
                     <label class="btn btn-outline-primary" for="groupByGroup">依組別</label>
                 </div>
-                <button class="btn btn-outline-secondary" data-bs-toggle="modal" data-bs-target="#settingsModal">
-                    <i class="bi bi-gear-fill"></i> 設定差勤
-                </button>
+                <button class="btn btn-outline-secondary" data-bs-toggle="modal" data-bs-target="#settingsModal"><i
+                        class="bi bi-gear-fill"></i> 設定差勤</button>
             </div>
         </div>
 
-        <!-- Session Tabs (Horizontal Scroll) -->
         <div class="nav-scroller mb-3">
-            <nav class="nav nav-pills" id="sessionTabs">
-                <!-- Dynamic Tabs will be injected here -->
-            </nav>
+            <nav class="nav nav-pills" id="sessionTabs"></nav>
         </div>
 
-        <!-- Stats Dashboard -->
         <div class="row mb-4">
             <div class="col-12">
                 <div class="stat-card border-start border-5 border-primary">
-                    <h4 class="mb-3 text-secondary">總覽 <small class="text-muted fs-6 ms-2"
-                            id="currentSessionLabel"></small></h4>
+                    <div class="row mb-3 align-items-center">
+                        <div class="col-md-6">
+                            <h5 class="mb-0">
+                                <button class="btn btn-outline-primary btn-sm me-2"
+                                    onclick="copyToClipboard(generateReportText('all', null, currentSession))">
+                                    <i class="bi bi-clipboard"></i> 複製總覽(當下)
+                                </button>
+                                总覽 <small class="text-muted" id="currentSessionLabel"></small>
+                            </h5>
+                        </div>
+                    </div>
                     <div class="d-flex flex-wrap gap-4 align-items-center" id="globalStatsPanel">
                         <span class="spinner-border spinner-border-sm" role="status"></span> 載入統計中...
                     </div>
@@ -184,44 +170,33 @@
             </div>
         </div>
 
-        <!-- Input Section -->
         <div class="card shadow-sm mb-4 border-0" style="border-radius: 12px;">
             <div class="card-body p-4">
                 <div class="d-flex justify-content-between align-items-center mb-3">
                     <h5 class="card-title mb-0"><i class="bi bi-person-plus-fill"></i> 快速新增</h5>
                     <button class="btn btn-outline-primary btn-sm" data-bs-toggle="modal"
-                        data-bs-target="#batchAddModal">
-                        <i class="bi bi-list-task"></i> 批量新增
-                    </button>
+                        data-bs-target="#batchAddModal"><i class="bi bi-list-task"></i> 批量新增</button>
                 </div>
                 <div class="row g-3">
                     <div class="col-md-3">
-                        <div class="form-floating">
-                            <input type="text" id="inputClass" class="form-control" placeholder="班級">
-                            <label for="inputClass">班級 (例: 101)</label>
-                        </div>
+                        <div class="form-floating"><input type="text" id="inputClass" class="form-control"
+                                placeholder="班級"><label for="inputClass">班級 (例: 101)</label></div>
                     </div>
                     <div class="col-md-3">
-                        <div class="form-floating">
-                            <input type="text" id="inputGroup" class="form-control" placeholder="組別">
-                            <label for="inputGroup">組別 (例: A組)</label>
-                        </div>
+                        <div class="form-floating"><input type="text" id="inputGroup" class="form-control"
+                                placeholder="組別"><label for="inputGroup">組別 (例: A組)</label></div>
                     </div>
                     <div class="col-md-4">
-                        <div class="form-floating">
-                            <input type="text" id="inputName" class="form-control" placeholder="姓名">
-                            <label for="inputName">姓名</label>
-                        </div>
+                        <div class="form-floating"><input type="text" id="inputName" class="form-control"
+                                placeholder="姓名"><label for="inputName">姓名</label></div>
                     </div>
-                    <div class="col-md-2 d-flex align-items-center">
-                        <button onclick="addStudent()" class="btn btn-primary btn-lg w-100 shadow-sm"><i
-                                class="bi bi-plus-lg"></i> 新增</button>
+                    <div class="col-md-2 d-flex align-items-center"><button onclick="addStudent()"
+                            class="btn btn-primary btn-lg w-100 shadow-sm"><i class="bi bi-plus-lg"></i> 新增</button>
                     </div>
                 </div>
             </div>
         </div>
 
-        <!-- Main Content Area: Dynamic Class Tables -->
         <div id="classContainer" class="row g-4">
             <div class="col-12 text-center py-5">
                 <div class="spinner-border text-primary" role="status"></div>
@@ -230,20 +205,18 @@
         </div>
     </div>
 
-    <!-- Settings Modal -->
+    <!-- Modals -->
     <div class="modal fade" id="settingsModal" tabindex="-1">
         <div class="modal-dialog">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title">差勤狀態設定</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    <h5 class="modal-title">差勤狀態設定</h5><button type="button" class="btn-close"
+                        data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body">
-                    <p class="text-muted small">在此新增或移除您需要的點名狀態 (自動同步給所有人)。</p>
-                    <div class="input-group mb-3">
-                        <input type="text" id="newStatusInput" class="form-control" placeholder="輸入新狀態名稱 (例: 病假)">
-                        <button class="btn btn-primary" onclick="addNewStatusType()">新增</button>
-                    </div>
+                    <div class="input-group mb-3"><input type="text" id="newStatusInput" class="form-control"
+                            placeholder="輸入新狀態名稱"><button class="btn btn-primary"
+                            onclick="addNewStatusType()">新增</button></div>
                     <hr>
                     <h6>目前可用狀態:</h6>
                     <div id="statusListContainer" class="d-flex flex-wrap"></div>
@@ -252,29 +225,20 @@
         </div>
     </div>
 
-    <!-- Batch Add Modal -->
     <div class="modal fade" id="batchAddModal" tabindex="-1">
         <div class="modal-dialog">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title">批量新增學生</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    <h5 class="modal-title">批量新增學生</h5><button type="button" class="btn-close"
+                        data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body">
-                    <div class="alert alert-info small">
-                        格式更新！請輸入：<strong>班級 組別 姓名</strong> (中間用空白隔開)<br>
-                        若無組別，可用「無」或任意代號。<br>
-                        例如：<br>
-                        101 A組 王小明<br>
-                        102 B組 李小美
-                    </div>
-                    <textarea id="batchInput" class="form-control" rows="10"
-                        placeholder="101 A組 王小明&#10;102 B組 李小美"></textarea>
+                    <div class="alert alert-info small">格式：<strong>班級 組別 姓名</strong> (中間空白)<br>範例：<br>101 A組 王小明</div>
+                    <textarea id="batchInput" class="form-control" rows="10" placeholder="101 A組 王小明"></textarea>
                 </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
-                    <button type="button" class="btn btn-primary" onclick="batchAddStudents()">開始匯入</button>
-                </div>
+                <div class="modal-footer"><button type="button" class="btn btn-secondary"
+                        data-bs-dismiss="modal">取消</button><button type="button" class="btn btn-primary"
+                        onclick="batchAddStudents()">開始匯入</button></div>
             </div>
         </div>
     </div>
@@ -282,9 +246,8 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-        import { getFirestore, collection, addDoc, onSnapshot, doc, updateDoc, deleteDoc, query, orderBy, setDoc, getDoc, writeBatch } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+        import { getFirestore, collection, addDoc, onSnapshot, doc, updateDoc, deleteDoc, query, setDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-        // *** Firebase 設定 ***
         const firebaseConfig = {
             apiKey: "AIzaSyACL_67nXJU6RZEf3InFqHQJ-5h6FMZ7t8",
             authDomain: "check-74ee8.firebaseapp.com",
@@ -300,19 +263,63 @@
         const studentsRef = collection(db, "students");
         const configRef = doc(db, "settings", "globalConfig");
 
-        // --- 狀態與設定 ---
-        // 時段列表
         const sessions = ["早點名", "早上上餐廳", "0740集合", "中午上餐廳", "晚上上餐廳", "晚自習", "晚點名", "備用點名"];
         let currentSession = sessions[0];
-        let currentGroupMode = "class"; // 'class' or 'group'
-
+        let currentGroupMode = "class";
         let currentStatuses = ["實到", "遲到", "缺席"];
         let studentsData = [];
 
-        // 初始化 UI
+        // 功能: 複製
+        function copyToClipboard(text) {
+            navigator.clipboard.writeText(text).then(() => alert("已複製！")).catch(err => { console.error(err); alert("複製失敗"); });
+        }
+
+        function generateReportText(scope, groupName = null, specifiedSession = null) {
+            let output = "";
+            const targetSessions = specifiedSession ? [specifiedSession] : sessions;
+            let targetGroups = [];
+            if (scope === 'all') {
+                targetGroups = [...new Set(studentsData.map(s => currentGroupMode === 'class' ? s.class : (s.group || '未分組')))].sort();
+            } else {
+                targetGroups = [groupName];
+            }
+
+            targetGroups.forEach(gName => {
+                output += `${gName}\n\n`;
+                targetSessions.forEach(session => {
+                    const groupStudents = studentsData.filter(s => {
+                        const sGroup = currentGroupMode === 'class' ? s.class : (s.group || '未分組');
+                        return sGroup === gName;
+                    });
+                    if (groupStudents.length === 0) return;
+                    const total = groupStudents.length;
+                    const stats = { '實到': 0 };
+                    const detailList = {};
+                    currentStatuses.forEach(s => { if (s !== '實到') detailList[s] = []; });
+
+                    groupStudents.forEach(s => {
+                        const status = (s.status && s.status[session]) ? s.status[session] : '實到';
+                        if (status === '實到') stats['實到']++;
+                        else {
+                            if (!detailList[status]) detailList[status] = [];
+                            detailList[status].push(s.name);
+                        }
+                    });
+
+                    output += `${session}\n應到${total}\n事故：\n`;
+                    let hasAccident = false;
+                    Object.entries(detailList).forEach(([status, names]) => {
+                        if (names.length > 0) output += `${status}${names.length} ${names.join(' ')}\n`;
+                    });
+                    output += `實到：${stats['實到']}\n\n`;
+                });
+                output += `------------------\n\n`;
+            });
+            return output;
+        }
+
         initSessionTabs();
 
-        // --- 初始化: 監聽設定檔 ---
         onSnapshot(configRef, (docSnapshot) => {
             if (docSnapshot.exists()) {
                 const data = docSnapshot.data();
@@ -326,129 +333,61 @@
             }
         });
 
-        // --- 初始化: 監聽學生資料 ---
-        // 暫時移除排序以排除索引問題
-        // const q = query(studentsRef, orderBy("class"), orderBy("timestamp"));
         const q = query(studentsRef);
-
         onSnapshot(q, (snapshot) => {
-            console.log("收到資料庫更新，文件數量:", snapshot.size);
             studentsData = [];
-            snapshot.forEach((doc) => {
-                studentsData.push({ id: doc.id, ...doc.data() });
-            });
-
-            // 手動排序 (取代資料庫排序)
+            snapshot.forEach((doc) => studentsData.push({ id: doc.id, ...doc.data() }));
             studentsData.sort((a, b) => {
                 if (a.class !== b.class) return a.class.localeCompare(b.class);
                 return (a.timestamp?.seconds || 0) - (b.timestamp?.seconds || 0);
             });
-
-            try {
-                renderAll();
-            } catch (err) {
-                console.error("渲染錯誤:", err);
-                alert("介面渲染發生錯誤: " + err.message);
-            }
-        }, (error) => {
-            console.error("讀取失敗:", error);
-            alert("讀取失敗！錯誤代碼: " + error.code + "\n訊息: " + error.message);
+            try { renderAll(); } catch (err) { console.error(err); }
         });
 
-        // --- 渲染時段頁籤 ---
         function initSessionTabs() {
             const container = document.getElementById('sessionTabs');
             container.innerHTML = sessions.map(session => `
-          <a class="nav-link ${session === currentSession ? 'active' : ''}" 
-             href="#" onclick="changeSession('${session}')">${session}</a>
-      `).join('');
+                <a class="nav-link ${session === currentSession ? 'active' : ''}" href="#" onclick="changeSession('${session}')">${session}</a>
+            `).join('');
         }
 
-        // --- 主渲染函式 ---
         function renderAll() {
             const container = document.getElementById('classContainer');
             const globalStatsPanel = document.getElementById('globalStatsPanel');
             document.getElementById('currentSessionLabel').innerText = `(${currentSession})`;
-
-            container.innerHTML = "";
-            globalStatsPanel.innerHTML = "";
+            container.innerHTML = ""; globalStatsPanel.innerHTML = "";
 
             const grouped = {};
             const globalStats = { total: 0, byStatus: {} };
-
             currentStatuses.forEach(s => globalStats.byStatus[s] = 0);
-            globalStats.byStatus["未點名"] = 0;
 
             studentsData.forEach(student => {
-                // 決定分組 Key
                 let key = currentGroupMode === 'class' ? student.class : student.group;
                 if (!key) key = "未分組";
-
                 if (!grouped[key]) {
                     grouped[key] = { students: [], stats: { total: 0, byStatus: {} } };
                     currentStatuses.forEach(s => grouped[key].stats.byStatus[s] = 0);
-                    grouped[key].stats.byStatus["未點名"] = 0;
                 }
                 grouped[key].students.push(student);
 
-                // 取得當前時段狀態 (預設邏輯)
-                let status = "實到"; // 預設值
-                if (student.status && typeof student.status === 'object') {
-                    // 新版資料結構: status 是 Map
-                    if (student.status[currentSession]) {
-                        status = student.status[currentSession];
-                    }
-                } else if (typeof student.status === 'string') {
-                    // 舊版相容: 如果是字串，只在第一個時段生效，或其他時段視為預設
-                    // 這裡可自訂策略，目前策略：舊資料一律視為「實到」，除非我們寫個遷移程式
-                    status = "實到";
-                }
+                let status = "實到";
+                if (student.status && student.status[currentSession]) status = student.status[currentSession];
+                student._currentStatus = status;
 
-                // 統計
                 grouped[key].stats.total++;
-                if (grouped[key].stats.byStatus[status] !== undefined) {
-                    grouped[key].stats.byStatus[status]++;
-                } else {
-                    if (!grouped[key].stats.byStatus["其他"]) grouped[key].stats.byStatus["其他"] = 0;
-                    grouped[key].stats.byStatus["其他"]++;
-                }
+                if (grouped[key].stats.byStatus[status] !== undefined) grouped[key].stats.byStatus[status]++;
 
                 globalStats.total++;
-                if (globalStats.byStatus[status] !== undefined) {
-                    globalStats.byStatus[status]++;
-                } else {
-                    if (!globalStats.byStatus["其他"]) globalStats.byStatus["其他"] = 0;
-                    globalStats.byStatus["其他"]++;
-                }
-
-                // 將計算出的當下狀態暫存回 student 物件方便後面渲染按鈕使用
-                student._currentStatus = status;
+                if (globalStats.byStatus[status] !== undefined) globalStats.byStatus[status]++;
             });
 
-            // 渲染 Global Stats
-            let globalStatsHtml = `
-          <div class="d-flex align-items-baseline me-4">
-              <span class="text-muted small me-2">應到總數</span>
-              <span class="fs-4 fw-bold text-dark">${globalStats.total}</span>
-          </div>
-      `;
-
-            const presentCount = globalStats.byStatus['實到'] || 0;
-            globalStatsHtml += `
-          <div class="d-flex align-items-baseline me-4">
-              <span class="text-muted small me-2">實到</span>
-              <span class="fs-4 fw-bold text-success">${presentCount}</span>
-          </div>
-      `;
-
+            // Global Stats
+            let globalStatsHtml = `<div class="d-flex align-items-baseline me-4"><span class="text-muted small me-2">應到總數</span><span class="fs-4 fw-bold text-dark">${globalStats.total}</span></div>`;
+            globalStatsHtml += `<div class="d-flex align-items-baseline me-4"><span class="text-muted small me-2">實到</span><span class="fs-4 fw-bold text-success">${globalStats.byStatus['實到'] || 0}</span></div>`;
             let breakdownHtml = "";
             Object.entries(globalStats.byStatus).forEach(([status, count]) => {
-                if (status !== '實到' && count > 0) {
-                    let color = status === "未點名" ? "text-secondary" : "text-danger";
-                    breakdownHtml += `<span class="me-3 ${color}">${status}: <b>${count}</b></span>`;
-                }
+                if (status !== '實到' && count > 0) breakdownHtml += `<span class="me-3 text-danger">${status}: <b>${count}</b></span>`;
             });
-
             globalStatsPanel.innerHTML = globalStatsHtml + `<div class="border-start ps-3 ms-2">${breakdownHtml}</div>`;
 
             if (Object.keys(grouped).length === 0) {
@@ -456,224 +395,112 @@
                 return;
             }
 
-            // 渲染卡片
             Object.keys(grouped).sort().forEach(groupName => {
                 const group = grouped[groupName];
-                const stats = group.stats;
-
-                let classStatStr = `應到: ${stats.total} | 實到: ${stats.byStatus['實到'] || 0}`;
-                let classOtherStr = [];
-                Object.entries(stats.byStatus).forEach(([s, c]) => {
-                    if (s !== '實到' && c > 0) classOtherStr.push(`${s}: ${c}`);
-                });
-                if (classOtherStr.length > 0) classStatStr += ` | <span class="text-warning">${classOtherStr.join(' ')}</span>`;
+                let classStatStr = `應到: ${group.stats.total} | 實到: ${group.stats.byStatus['實到'] || 0}`;
 
                 const rows = group.students.map(student => `
-              <tr>
-                  <td>
-                      <span class="fw-bold text-primary">${student.name}</span>
-                      <br><span class="badge bg-light text-secondary border">${student.class} / ${student.group || '-'}</span>
-                  </td>
-                  <td>${getStatusBadge(student._currentStatus)}</td>
-                  <td>
-                      <select class="form-select form-select-sm fw-bold ${getStatusColorClass(student._currentStatus)}" 
-                              onchange="updateStatus('${student.id}', this.value)" 
-                              style="min-width: 110px; cursor: pointer;">
-                          ${currentStatuses.map(s => `
-                              <option value="${s}" ${student._currentStatus === s ? 'selected' : ''}>${s}</option>
-                          `).join('')}
-                      </select>
-                  </td>
-                  <td class="text-end">
-                      <button class="btn btn-sm btn-light text-danger" onclick="removeStudent('${student.id}')"><i class="bi bi-trash"></i></button>
-                  </td>
-              </tr>
-          `).join('');
+                    <tr>
+                        <td><span class="fw-bold text-primary">${student.name}</span><br><span class="badge bg-light text-secondary border">${student.class} / ${student.group || '-'}</span></td>
+                        <td>${getStatusBadge(student._currentStatus)}</td>
+                        <td>
+                            <select class="form-select form-select-sm fw-bold ${getStatusColorClass(student._currentStatus)}" onchange="updateStatus('${student.id}', this.value)" style="min-width: 110px;">
+                                ${currentStatuses.map(s => `<option value="${s}" ${student._currentStatus === s ? 'selected' : ''}>${s}</option>`).join('')}
+                            </select>
+                        </td>
+                        <td class="text-end"><button class="btn btn-sm btn-light text-danger" onclick="removeStudent('${student.id}')"><i class="bi bi-trash"></i></button></td>
+                    </tr>
+                `).join('');
 
                 const card = `
-              <div class="col-xl-6 col-12">
-                  <div class="card shadow-sm border-0 h-100">
-                      <div class="class-header d-flex justify-content-between align-items-center">
-                          <span class="fs-5">
-                            <i class="bi ${currentGroupMode === 'class' ? 'bi-house-door-fill' : 'bi-people-fill'} me-2"></i>
-                            ${groupName}
-                          </span>
-                          <span class="badge bg-light text-dark opacity-75 fw-normal fs-6">${classStatStr}</span>
-                      </div>
-                      <div class="card-body p-0">
-                          <div class="table-responsive">
-                              <table class="table table-hover align-middle mb-0">
-                                  <thead class="table-light">
-                                      <tr>
-                                          <th style="width: 25%">姓名/資訊</th>
-                                          <th style="width: 15%">狀態</th>
-                                          <th>操作</th>
-                                          <th style="width: 10%"></th>
-                                      </tr>
-                                  </thead>
-                                  <tbody>${rows}</tbody>
-                              </table>
-                          </div>
-                      </div>
-                  </div>
-              </div>
-          `;
+                    <div class="col-xl-6 col-12">
+                        <div class="card shadow-sm border-0 h-100">
+                            <div class="class-header d-flex justify-content-between align-items-center">
+                                <div class="d-flex align-items-center">
+                                    <span class="fs-5 me-2"><i class="bi bi-house-door-fill me-2"></i>${groupName}</span>
+                                    <div class="dropdown">
+                                        <button class="btn btn-sm btn-link text-white p-0" type="button" data-bs-toggle="dropdown"><i class="bi bi-three-dots-vertical"></i></button>
+                                        <ul class="dropdown-menu">
+                                            <li><a class="dropdown-item" href="#" onclick="copyToClipboard(generateReportText('group', '${groupName}', '${currentSession}'))">複製本班 (當下時段)</a></li>
+                                            <li><a class="dropdown-item" href="#" onclick="copyToClipboard(generateReportText('group', '${groupName}', null))">複製本班 (全部時段)</a></li>
+                                        </ul>
+                                    </div>
+                                </div>
+                                <span class="badge bg-light text-dark opacity-75 fw-normal fs-6">${classStatStr}</span>
+                            </div>
+                            <div class="card-body p-0"><div class="table-responsive"><table class="table table-hover align-middle mb-0"><thead class="table-light"><tr><th style="width: 25%">姓名</th><th style="width: 15%">狀態</th><th>操作</th><th style="width: 10%"></th></tr></thead><tbody>${rows}</tbody></table></div></div>
+                        </div>
+                    </div>
+                `;
                 container.innerHTML += card;
             });
         }
 
-        // ============== Global Functions ==============
-
-        window.changeSession = (sessionName) => {
-            currentSession = sessionName;
-            initSessionTabs(); // 更新 active 狀態
-            renderAll(); // 重繪數據
-        }
-
-        window.setGroupBy = (mode) => {
-            currentGroupMode = mode;
-            renderAll();
-        }
-
+        // Global Bindings
+        window.changeSession = (n) => { currentSession = n; initSessionTabs(); renderAll(); };
+        window.setGroupBy = (m) => { currentGroupMode = m; renderAll(); };
         window.addStudent = async () => {
             const classInput = document.getElementById('inputClass').value.trim();
             const groupInput = document.getElementById('inputGroup').value.trim();
             const nameInput = document.getElementById('inputName').value.trim();
-
-            if (!classInput || !nameInput) { alert("請輸入班級和姓名"); return; }
-
+            if (!classInput || !nameInput) return alert("請輸入班級和姓名");
             try {
-                // 狀態初始化為空物件，因為「預設」邏輯是在 render 時動態判斷的
-                // 這樣可以節省資料庫空間，且切換時段時都會預設為實到
-                await addDoc(studentsRef, {
-                    class: classInput,
-                    group: groupInput || "無",
-                    name: nameInput,
-                    status: {},
-                    timestamp: new Date()
-                });
-
-                // 清除欄位
+                await addDoc(studentsRef, { class: classInput, group: groupInput || "無", name: nameInput, status: {}, timestamp: new Date() });
                 document.getElementById('inputName').value = '';
-                document.getElementById('inputClass').value = '';
-                document.getElementById('inputGroup').value = '';
-                document.getElementById('inputClass').focus();
             } catch (e) { console.error(e); alert("新增失敗"); }
-        }
-
+        };
         window.batchAddStudents = async () => {
             const input = document.getElementById('batchInput').value.trim();
             if (!input) return;
-
             const lines = input.split('\n');
             const promises = [];
-            let count = 0;
-
             for (let line of lines) {
                 line = line.trim();
-                if (!line) continue;
-
                 const parts = line.split(/\s+/);
-                if (parts.length < 3) continue; // 至少要有 [班級, 組別, 姓名]
-
-                const className = parts[0];
-                const groupName = parts[1];
-                const studentName = parts.slice(2).join(' ');
-
-                promises.push(addDoc(studentsRef, {
-                    class: className,
-                    group: groupName,
-                    name: studentName,
-                    status: {},
-                    timestamp: new Date()
-                }));
-                count++;
+                if (parts.length < 3) continue;
+                promises.push(addDoc(studentsRef, { class: parts[0], group: parts[1], name: parts.slice(2).join(' '), status: {}, timestamp: new Date() }));
             }
-
-            if (count === 0) {
-                alert("格式錯誤。請確認格式：班級 組別 姓名");
-                return;
-            }
-
             try {
                 await Promise.all(promises);
-                alert(`成功匯入 ${count} 位學生！`);
+                alert("匯入成功！");
+                bootstrap.Modal.getOrCreateInstance(document.getElementById('batchAddModal')).hide();
                 document.getElementById('batchInput').value = '';
+            } catch (e) { console.error(e); alert("匯入失敗"); }
+        };
+        window.updateStatus = async (id, val) => {
+            await updateDoc(doc(db, "students", id), { [`status.${currentSession}`]: val });
+        };
+        window.removeStudent = async (id) => { if (confirm('確定刪除？')) await deleteDoc(doc(db, "students", id)); };
+        window.addNewStatusType = async () => {
+            const val = document.getElementById('newStatusInput').value.trim();
+            if (!val || currentStatuses.includes(val)) return;
+            await updateDoc(configRef, { statuses: [...currentStatuses, val] });
+            document.getElementById('newStatusInput').value = '';
+        };
+        window.removeStatusType = async (val) => {
+            if (confirm(`移除 ${val}?`)) await updateDoc(configRef, { statuses: currentStatuses.filter(s => s !== val) });
+        };
+        window.copyToClipboard = copyToClipboard;
+        window.generateReportText = generateReportText;
 
-                // 安全關閉 Modal
-                const modalEl = document.getElementById('batchAddModal');
-                const modal = bootstrap.Modal.getOrCreateInstance(modalEl);
-                modal.hide();
-            } catch (e) { console.error(e); alert("匯入失敗: " + e.message); }
+        function getStatusBadge(s) {
+            if (s === '實到') return '<span class="badge bg-success">實到</span>';
+            if (s === '缺席') return '<span class="badge bg-danger">缺席</span>';
+            if (s === '遲到') return '<span class="badge bg-warning text-dark">遲到</span>';
+            return `<span class="badge bg-info text-dark">${s}</span>`;
         }
-
-        window.updateStatus = async (id, newStatus) => {
-            const student = studentsData.find(s => s.id === id);
-            if (!student) return;
-
-            // 準備要更新的資料：使用 Dot Notation 更新 Map 中的特定 Key
-            // "status.早點名": "缺席"
-            const fieldPath = `status.${currentSession}`;
-
-            // 注意：如果是舊資料 (status 是字串)，要先轉成物件，否則 update 會失敗
-            if (typeof student.status === 'string') {
-                // 需要完全覆寫
-                const newStatusObj = {};
-                newStatusObj[currentSession] = newStatus;
-                await updateDoc(doc(db, "students", id), { status: newStatusObj });
-            } else {
-                // 正常更新 map 內的一個欄位
-                await updateDoc(doc(db, "students", id), { [fieldPath]: newStatus });
-            }
-        }
-
-        window.removeStudent = async (id) => {
-            if (confirm('確定刪除？')) await deleteDoc(doc(db, "students", id));
-        }
-
-        // Helpers
-        window.addNewStatusType = async () => { /* ...與之前相同... */
-            const input = document.getElementById('newStatusInput');
-            const val = input.value.trim();
-            if (!val) return;
-            if (currentStatuses.includes(val)) { alert("狀態已存在"); return; }
-            const newStatusList = [...currentStatuses, val];
-            await updateDoc(configRef, { statuses: newStatusList });
-            input.value = '';
-        }
-
-        window.removeStatusType = async (val) => { /* ...與之前相同... */
-            if (!confirm(`確定要移除「${val}」嗎？`)) return;
-            const newStatusList = currentStatuses.filter(s => s !== val);
-            await updateDoc(configRef, { statuses: newStatusList });
-        }
-
-        function getStatusBadge(status) {
-            if (!status || status === "未點名") return '<span class="badge bg-secondary">未點名</span>';
-            if (status === "實到") return '<span class="badge bg-success">實到</span>';
-            if (status === "遲到") return '<span class="badge bg-warning text-dark">遲到</span>';
-            if (status === "缺席") return '<span class="badge bg-danger">缺席</span>';
-            return `<span class="badge bg-info text-dark">${status}</span>`;
-        }
-
-        function getStatusColorClass(status) {
-            if (!status || status === "實到") return "text-success border-success bg-white";
-            if (status === "缺席") return "text-danger border-danger bg-white";
-            if (status === "遲到") return "text-warning border-warning bg-white";
+        function getStatusColorClass(s) {
+            if (!s || s === '實到') return "text-success border-success bg-white";
+            if (s === '缺席') return "text-danger border-danger bg-white";
+            if (s === '遲到') return "text-warning border-warning bg-white";
             return "text-secondary border-secondary bg-white";
         }
-
         function renderStatusSettings() {
-            const container = document.getElementById('statusListContainer');
-            container.innerHTML = currentStatuses.map(s => `
-          <div class="custom-status-tag border rounded px-2 py-1 bg-light">
-              ${s}
-              ${s !== '實到' ? `<span role="button" class="text-danger ms-2 fw-bold" onclick="removeStatusType('${s}')">&times;</span>` : ''} 
-          </div>
-      `).join('');
+            document.getElementById('statusListContainer').innerHTML = currentStatuses.map(s => `
+                <div class="custom-status-tag border rounded px-2 py-1 bg-light">${s} ${s !== '實到' ? `<span role="button" class="text-danger ms-2 fw-bold" onclick="removeStatusType('${s}')">&times;</span>` : ''}</div>
+            `).join('');
         }
     </script>
-
 </body>
 
 </html>
