@@ -1192,7 +1192,7 @@
                     notificationBtn.classList.add('d-none');
                 }
 
-                if (currentUser.role === 'super_admin') {
+                if (currentUser.role === 'super_admin' || currentUser.role === 'general_admin') {
                     adminManageLink.classList.remove('d-none');
                 } else {
                     adminManageLink.classList.add('d-none');
