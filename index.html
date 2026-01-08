@@ -759,16 +759,29 @@
                 if (student.status && student.status[statusKey]) status = student.status[statusKey];
                 student._currentStatus = status;
 
-                grouped[key].stats.total++;
-                if (grouped[key].stats.byStatus[status] !== undefined) {
-                    grouped[key].stats.byStatus[status]++;
-                    grouped[key].stats.byStatusNames[status].push(student.name);
+                globalStats.total++;
+
+                // Dynamically init status if unknown
+                if (globalStats.byStatus[status] === undefined) {
+                    globalStats.byStatus[status] = 0;
+                    globalStats.byStatusNames[status] = [];
                 }
 
-                globalStats.total++;
-                if (globalStats.byStatus[status] !== undefined) {
-                    globalStats.byStatus[status]++;
+                globalStats.byStatus[status]++;
+                // Only push name if not '實到'
+                if (status !== '實到') {
                     globalStats.byStatusNames[status].push(student.name);
+                }
+
+                // Same for group stats
+                grouped[key].stats.total++;
+                if (grouped[key].stats.byStatus[status] === undefined) {
+                    grouped[key].stats.byStatus[status] = 0;
+                    grouped[key].stats.byStatusNames[status] = [];
+                }
+                grouped[key].stats.byStatus[status]++;
+                if (status !== '實到') {
+                    grouped[key].stats.byStatusNames[status].push(student.name);
                 }
             });
 
