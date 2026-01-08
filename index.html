@@ -401,6 +401,15 @@
                 </div>
                 <div class="modal-body">
                     <div class="input-group mb-3">
+                        <select id="adminClassFilter" class="form-select" style="max-width: 200px;"
+                            onchange="renderAdminUserList()">
+                            <option value="all">所有班級/組別</option>
+                            <!-- Options will be populated via JS or static? Actually JS populating is better but static is fine for now or I can inject relevant options -->
+                            <script>
+                                document.write(classOrder.map(c => `<option value="${c}">${c}</option>`).join(''));
+                                document.write(groupOrder.map(g => `<option value="${g}">${g}</option>`).join(''));
+                            </script>
+                        </select>
                         <span class="input-group-text"><i class="bi bi-search"></i></span>
                         <input type="text" id="adminUserSearch" class="form-control" placeholder="搜尋姓名、班級、組別或權限..."
                             oninput="renderAdminUserList()">
@@ -1355,13 +1364,18 @@
         window.renderAdminUserList = () => {
             const tbody = document.getElementById('adminUserListBody');
             const term = document.getElementById('adminUserSearch').value.toLowerCase();
+            const filterClass = document.getElementById('adminClassFilter') ? document.getElementById('adminClassFilter').value : 'all';
 
-            const filtered = studentsData.filter(s =>
-                s.name.includes(term) ||
-                s.class.includes(term) ||
-                (s.group && s.group.includes(term)) ||
-                (s.role || 'student').includes(term)
-            );
+            const filtered = studentsData.filter(s => {
+                const matchesSearch = s.name.includes(term) ||
+                    s.class.includes(term) ||
+                    (s.group && s.group.includes(term)) ||
+                    (s.role || 'student').includes(term);
+
+                const matchesFilter = filterClass === 'all' || s.class === filterClass || s.group === filterClass;
+
+                return matchesSearch && matchesFilter;
+            });
 
             const roleOptions = [
                 { val: 'student', label: '學生' },
