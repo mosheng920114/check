@@ -1089,10 +1089,10 @@
                 container.innerHTML += card;
             });
 
-            // Re-apply search filter if exists
-            if (document.getElementById('searchInput').value.trim()) {
-                filterStudents();
-            }
+            // Re-apply search filter if exists - REMOVED because filterStudents() conflicts with renderAll's internal filtering logic
+            // if (document.getElementById('searchInput').value.trim()) {
+            //     filterStudents();
+            // }
         }
 
         window.migrateData = async () => {
@@ -1376,6 +1376,18 @@
             searchTags.splice(index, 1);
             renderSearchTags();
             renderAll();
+        };
+
+        // Render Search Tags
+        window.renderSearchTags = () => {
+            const container = document.getElementById('searchTagsContainer');
+            if (!container) return;
+            container.innerHTML = searchTags.map((tag, index) => `
+                <span class="badge bg-primary d-flex align-items-center gap-2 px-3 py-2 fs-6">
+                    ${tag}
+                    <i class="bi bi-x-circle-fill cursor-pointer" onclick="removeSearchTag(${index})"></i>
+                </span>
+            `).join('');
         };
 
         window.renderStatusSettings = () => {
