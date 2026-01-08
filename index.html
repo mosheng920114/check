@@ -747,8 +747,36 @@
                 return;
             }
 
-            Object.keys(grouped).sort().forEach(groupName => {
-                const group = grouped[groupName];
+            // Custom Sort Orders
+            const classOrder = [
+                "一班", "二班", "三班", "四班", "五班", "六班",
+                "七班", "八班", "九班", "十班", "十一班", "十二班",
+                "中隊部", "參謀", "區隊部"
+            ];
+            const groupOrder = [
+                "115一般組", "115結構組", "115發修組", "115航設組",
+                "116一般組", "116結構組", "116發修組", "116航設組",
+                "專軍"
+            ];
+
+            const sortedKeys = Object.keys(grouped).sort((a, b) => {
+                const order = currentGroupMode === 'class' ? classOrder : groupOrder;
+                const indexA = order.indexOf(a);
+                const indexB = order.indexOf(b);
+
+                // Known items first
+                if (indexA !== -1 && indexB !== -1) return indexA - indexB;
+                if (indexA !== -1) return -1;
+                if (indexB !== -1) return 1;
+
+                // Unknown items alphabetically
+                return a.localeCompare(b, 'zh-Hant');
+            });
+
+            sortedKeys.forEach(key => {
+                const groupName = key;
+                const group = grouped[key];
+
                 let classStatStr = `應到: ${group.stats.total} | 實到: ${group.stats.byStatus['實到'] || 0}`;
 
                 // Generate class detail string
@@ -1193,6 +1221,7 @@
             const filtered = studentsData.filter(s =>
                 s.name.includes(term) ||
                 s.class.includes(term) ||
+                (s.group && s.group.includes(term)) ||
                 (s.role || 'student').includes(term)
             );
 
@@ -1559,30 +1588,41 @@
             if (s === '遲到') return '<span class="badge bg-warning text-dark">遲到</span>';
             return `<span class="badge bg-info text-dark">${s}</span>`;
         }
+        // Search Filtering
         function filterStudents() {
-            const query = document.getElementById('searchInput').value.trim().toLowerCase();
-            const cards = document.querySelectorAll('.card'); // Each group/class is in a card
+            const term = document.getElementById('searchInput').value.toLowerCase();
 
+            // Search logic:
+            // 1. If term matches Card Header (Class/Group Name), show the whole card and all rows.
+            // 2. If term matches Student Name, show that row (and its parent card).
+            // 3. Otherwise hide.
+
+            const cards = document.querySelectorAll('#classContainer .card');
             cards.forEach(card => {
+                const headerText = card.querySelector('.class-header').innerText.toLowerCase();
+                const cardMatchesHeader = headerText.includes(term);
+
                 const rows = card.querySelectorAll('tbody tr');
-                let hasVisibleStudent = false;
+                let hasVisibleRow = false;
 
                 rows.forEach(row => {
-                    // Check all text in the row (Name, Class, Group, etc.)
-                    // This is simpler and robust for both mobile and desktop views
-                    if (row.textContent.toLowerCase().includes(query)) {
-                        row.style.display = ""; // Reset to default (table-row or grid)
-                        hasVisibleStudent = true;
+                    const name = row.querySelector('.fw-bold').innerText.toLowerCase();
+                    const classGroup = row.querySelector('.badge').innerText.toLowerCase(); // Getting Class/Group text from row badge
+
+                    // Match against: Name OR Class/Group Badge OR (Parent Card Header if matched)
+                    if (cardMatchesHeader || name.includes(term) || classGroup.includes(term)) {
+                        row.classList.remove('d-none');
+                        hasVisibleRow = true;
                     } else {
-                        row.style.setProperty('display', 'none', 'important'); // Force hide
+                        row.classList.add('d-none');
                     }
                 });
 
-                // If searching, hide empty groups.
-                if (hasVisibleStudent) {
-                    card.parentElement.style.display = "";
+                // Visibility of the Card itself
+                if (hasVisibleRow) {
+                    card.parentElement.classList.remove('d-none');
                 } else {
-                    card.parentElement.style.display = "none";
+                    card.parentElement.classList.add('d-none');
                 }
             });
         }
