@@ -1111,20 +1111,40 @@
 
             for (const s of targets) {
                 const updates = {};
+                // Find and delete relevant pending requests
+                const relevantRequests = pendingRequests.filter(r => r.studentId === s.id);
+
                 if (scope === 'current') {
                     const key = `${currentDay}_${currentSession}`;
-                    updates[`status.${key}`] = '實到';
+                    // Update Status
+                    if (s.status && s.status[key] && s.status[key] !== '實到') {
+                        updates[`status.${key}`] = deleteField();
+                    }
+                    // Also delete pending request for THIS session
+                    const reqToDelete = relevantRequests.find(r => r.targetSession === key);
+                    if (reqToDelete) {
+                        promises.push(deleteDoc(doc(db, "requests", reqToDelete.id)));
+                    }
                 } else {
-                    // All sessions for today
+                    // 'day' scope: reset all sessions for currentDay
                     sessions.forEach(sess => {
                         const key = `${currentDay}_${sess}`;
-                        updates[`status.${key}`] = '實到';
+                        if (s.status && s.status[key] && s.status[key] !== '實到') {
+                            updates[`status.${key}`] = deleteField();
+                        }
+                        // Delete requests
+                        const reqToDelete = relevantRequests.find(r => r.targetSession === key);
+                        if (reqToDelete) {
+                            promises.push(deleteDoc(doc(db, "requests", reqToDelete.id)));
+                        }
                     });
                 }
-                promises.push(updateDoc(doc(db, "students", s.id), updates));
-                updateCount++;
-            }
 
+                if (Object.keys(updates).length > 0) {
+                    promises.push(updateDoc(doc(db, "students", s.id), updates));
+                    updateCount++;
+                }
+            }
             try {
                 await Promise.all(promises);
                 alert(`已重置 ${updateCount} 位學生的狀態。`);
