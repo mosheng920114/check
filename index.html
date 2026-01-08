@@ -208,9 +208,11 @@
             <div class="col">
                 <div class="input-group">
                     <span class="input-group-text bg-white border-end-0"><i class="bi bi-search text-muted"></i></span>
-                    <input type="search" id="searchInput" class="form-control border-start-0" placeholder="搜尋姓名、班級或組別"
-                        oninput="filterStudents()">
+                    <input type="search" id="searchInput" class="form-control border-start-0"
+                        placeholder="搜尋姓名、班級或組別 (按 Enter 新增篩選)" onkeyup="handleSearchInput(event)"
+                        oninput="renderAll()">
                 </div>
+                <div id="searchTagsContainer" class="d-flex flex-wrap gap-2 mt-2"></div>
             </div>
         </div>
         <div class="row mb-4">
@@ -597,6 +599,9 @@
             return output;
         }
 
+        // Multi-select Search Tags
+        let searchTags = [];
+
         onSnapshot(configRef, (docSnapshot) => {
             if (docSnapshot.exists()) {
                 const data = docSnapshot.data();
@@ -661,7 +666,7 @@
             renderAll();
         };
 
-        function renderAll() {
+        function renderAll(searchTerm = '') {
             if (currentUser && typeof updateNotificationBadge === 'function') {
                 try { updateNotificationBadge(); } catch (e) { }
             }
@@ -671,6 +676,63 @@
             document.getElementById('currentSessionLabel').innerText = `(${currentDay} - ${currentSession})`;
             container.innerHTML = ""; globalStatsPanel.innerHTML = "";
 
+            // Filter Data
+            let inputTerm = searchTerm ? searchTerm.toLowerCase().trim() : '';
+            // Get value from input directly if not passed (though oninput passes it)
+            if (!inputTerm) {
+                const inputEl = document.getElementById('searchInput');
+                if (inputEl) inputTerm = inputEl.value.toLowerCase().trim();
+            }
+
+            const displayedStudents = studentsData.filter(student => {
+                const sName = student.name.toLowerCase();
+                const sClass = student.class.toLowerCase();
+                const sGroup = (student.group || '').toLowerCase();
+
+                // 1. Check Input Term (Partial Match)
+                const matchesInput = !inputTerm || (
+                    sName.includes(inputTerm) ||
+                    sClass.includes(inputTerm) ||
+                    sGroup.includes(inputTerm)
+                );
+
+                // 2. Check Tags (OR Logic - Match ANY tag)
+                // If no tags, ignore this check (true). If tags exist, must match at least one.
+                let matchesTags = true;
+                if (searchTags.length > 0) {
+                    matchesTags = searchTags.some(tag => {
+                        const t = tag.toLowerCase();
+                        return sName.includes(t) || sClass.includes(t) || sGroup.includes(t);
+                    });
+                }
+
+                // Final Decision: Must match Input (if any) AND Tags (if any)
+                // Wait, User requested "Accumulate results". 
+                // "Search 3rd Class -> Show. Then Search 4th Class -> Show Both."
+                // This implies tags should be combined with OR logic.
+                // Input term is "temporary tag".
+
+                // Logic Adjustment:
+                // If (Input matches OR match any Tag) -> Show.
+                // If NO input AND NO tags -> Show All.
+
+                if (!inputTerm && searchTags.length === 0) return true;
+
+                let hit = false;
+                if (inputTerm && (sName.includes(inputTerm) || sClass.includes(inputTerm) || sGroup.includes(inputTerm))) {
+                    hit = true;
+                }
+                if (!hit && searchTags.length > 0) {
+                    if (searchTags.some(tag => {
+                        const t = tag.toLowerCase();
+                        return sName.includes(t) || sClass.includes(t) || sGroup.includes(t);
+                    })) {
+                        hit = true;
+                    }
+                }
+                return hit;
+            });
+
             const grouped = {};
             const globalStats = { total: 0, byStatus: {}, byStatusNames: {} };
             currentStatuses.forEach(s => {
@@ -678,7 +740,7 @@
                 globalStats.byStatusNames[s] = [];
             });
 
-            studentsData.forEach(student => {
+            displayedStudents.forEach(student => {
                 let key = currentGroupMode === 'class' ? student.class : student.group;
                 if (!key) key = "未分組";
                 if (!grouped[key]) {
@@ -1154,10 +1216,46 @@
                 alert("重置失敗: " + e.message);
             }
         };
-        // Export locally defined functions to global scope
+        // --- Multi-select Search Logic ---
+
+        window.handleSearchInput = (event) => {
+            if (event.key === 'Enter') {
+                const term = event.target.value.trim();
+                window.addSearchTag(term);
+            }
+        };
+
+        window.addSearchTag = (term) => {
+            if (term && !searchTags.includes(term)) {
+                searchTags.push(term);
+                document.getElementById('searchInput').value = ''; // Clear input
+                renderSearchTags();
+                renderAll();
+            } else if (term) {
+                document.getElementById('searchInput').value = ''; // Clear duplicate
+            }
+        };
+
+        window.removeSearchTag = (index) => {
+            searchTags.splice(index, 1);
+            renderSearchTags();
+            renderAll();
+        };
+
+        function renderSearchTags() {
+            const container = document.getElementById('searchTagsContainer');
+            container.innerHTML = searchTags.map((tag, index) => `
+                <span class="badge bg-primary d-flex align-items-center">
+                    ${tag}
+                    <i class="bi bi-x ms-2" onclick="removeSearchTag(${index})" style="cursor: pointer;"></i>
+                </span>
+            `).join('');
+        }
+
+        // Export helper functions
         window.copyToClipboard = copyToClipboard;
         window.generateReportText = generateReportText;
-        window.filterStudents = filterStudents;
+        window.renderAll = renderAll;
         window.copyGlobalReport = () => copyToClipboard(generateReportText('all', null, currentSession));
 
         // --- Auth & Login Logic ---
