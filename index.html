@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>多人協作點名系統</title>
+    <title>多人協作點名系統 v1.2</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     <style>
@@ -404,12 +404,19 @@
                         <select id="adminClassFilter" class="form-select" style="max-width: 200px;"
                             onchange="renderAdminUserList()">
                             <option value="all">所有班級/組別</option>
-                            <!-- Options will be populated via JS or static? Actually JS populating is better but static is fine for now or I can inject relevant options -->
-                            <script>
-                                document.write(classOrder.map(c => `<option value="${c}">${c}</option>`).join(''));
-                                document.write(groupOrder.map(g => `<option value="${g}">${g}</option>`).join(''));
-                            </script>
                         </select>
+                        <script>
+                            (function () {
+                                const sel = document.getElementById('adminClassFilter');
+                                if (sel) {
+                                    const opts = [
+                                        ...classOrder.map(c => `<option value="${c}">${c}</option>`),
+                                        ...groupOrder.map(g => `<option value="${g}">${g}</option>`)
+                                    ];
+                                    sel.innerHTML += opts.join('');
+                                }
+                            })();
+                        </script>
                         <span class="input-group-text"><i class="bi bi-search"></i></span>
                         <input type="text" id="adminUserSearch" class="form-control" placeholder="搜尋姓名、班級、組別或權限..."
                             oninput="renderAdminUserList()">
@@ -1550,11 +1557,13 @@
                 for (const req of relevant) {
                     if (action === 'approve') {
                         const studentRef = doc(db, "students", req.studentId);
-                        await updateDoc(studentRef, { [`status.${req.targetSession} `]: req.newStatus });
+                        // Fix: Removed trailing space in key
+                        await updateDoc(studentRef, { [`status.${req.targetSession}`]: req.newStatus });
                     }
                     await deleteDoc(doc(db, "requests", req.id));
                     count++;
                 }
+                // alert("批量操作完成");
             } catch (e) {
                 console.error(e);
                 alert("批量操作部分失敗: " + e.message);
@@ -1571,23 +1580,15 @@
                 if (action === 'approve') {
                     // 1. Update Student Data
                     const studentRef = doc(db, "students", req.studentId);
-                    await updateDoc(studentRef, { [`status.${req.targetSession} `]: req.newStatus });
+                    // Fix: Removed trailing space in key
+                    await updateDoc(studentRef, { [`status.${req.targetSession}`]: req.newStatus });
 
-                    // 2. Delete Request (or update to approved)
+                    // 2. Delete Request
                     await deleteDoc(doc(db, "requests", reqId));
-                    // alert("已批准"); // Optional, maybe too noisy
                 } else {
                     // Reject: Just delete request
                     await deleteDoc(doc(db, "requests", reqId));
                 }
-                // Modal will refresh automatically next time opened or via listener?
-                // Snapshot will trigger update of pendingRequests.
-                // We should re-render modal if it's open.
-                // Ideally the snapshot listener calls renderAll.
-                // We can check if modal is open and refresh it.
-                // Let's add a global listener for that.
-                // bootstrap.Modal.getOrCreateInstance(document.getElementById('approvalModal')).hide();
-                // Do not hide. The list will refresh via the snapshot listener -> renderAll -> refreshModal invocation.
             } catch (e) {
                 console.error(e);
                 alert("操作失敗: " + e.message);
