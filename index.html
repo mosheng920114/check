@@ -429,6 +429,11 @@
             <div class="modal-content">
                 <div class="modal-header bg-warning">
                     <h5 class="modal-title fw-bold"><i class="bi bi-clipboard-check me-2"></i>審核申請</h5>
+                    <div class="ms-auto me-2">
+                        <button class="btn btn-success btn-sm me-1"
+                            onclick="batchHandleRequests('approve')">全部批准</button>
+                        <button class="btn btn-danger btn-sm" onclick="batchHandleRequests('reject')">全部駁回</button>
+                    </div>
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body p-0">
@@ -624,6 +629,7 @@
             });
             renderAll(); // Re-render when requests change
             if (typeof updateNotificationBadge === 'function') updateNotificationBadge(); // Helper: Force badge update
+            if (typeof refreshApprovalModal === 'function') refreshApprovalModal(); // Refresh modal content if open
         });
 
         function initWeekTabs() {
@@ -638,9 +644,22 @@
             const container = document.getElementById('sessionTabs');
             container.innerHTML = sessions.map(s => `
                 <button class="btn ${currentSession === s ? 'btn-primary' : 'btn-white bg-white border'} rounded-pill text-nowrap px-3 shadow-sm" 
-                        onclick="changeSession('${s}')">${s}</button>
+                        onclick="changeSession('${s}')">${currentDay} - ${s}</button>
             `).join('');
         }
+
+        window.changeDay = (d) => {
+            currentDay = d;
+            initWeekTabs();
+            initSessionTabs();
+            renderAll();
+        };
+
+        window.changeSession = (s) => {
+            currentSession = s;
+            initSessionTabs();
+            renderAll();
+        };
 
         function renderAll() {
             if (currentUser && typeof updateNotificationBadge === 'function') {
@@ -1287,7 +1306,7 @@
                             <div class="d-flex align-items-center mb-1">
                                 <span class="fw-bold me-2">${req.studentName}</span>
                                 <span class="badge bg-light text-secondary border me-2">${req.studentClass}/${req.studentGroup}</span>
-                                <span class="badge bg-warning text-dark">${req.sessionName}</span>
+                                <span class="badge bg-warning text-dark">${req.dayName || ''} ${req.sessionName}</span>
                             </div>
                             <div class="small">
                                 <span class="text-muted">由 ${req.requesterName} 申請：</span>
@@ -1309,6 +1328,28 @@
                 `).join('');
             }
             bootstrap.Modal.getOrCreateInstance(document.getElementById('approvalModal')).show();
+        };
+
+        window.batchHandleRequests = async (action) => {
+            const relevant = getRelevantRequests();
+            if (relevant.length === 0) return alert("目前沒有可處理的申請");
+
+            if (!confirm(`確定要全部 ${action === 'approve' ? '批准' : '駁回'} 共 ${relevant.length} 筆申請嗎？`)) return;
+
+            try {
+                let count = 0;
+                for (const req of relevant) {
+                    if (action === 'approve') {
+                        const studentRef = doc(db, "students", req.studentId);
+                        await updateDoc(studentRef, { [`status.${req.targetSession}`]: req.newStatus });
+                    }
+                    await deleteDoc(doc(db, "requests", req.id));
+                    count++;
+                }
+            } catch (e) {
+                console.error(e);
+                alert("批量操作部分失敗: " + e.message);
+            }
         };
 
         window.handleRequest = async (reqId, action) => {
@@ -1336,13 +1377,53 @@
                 // Ideally the snapshot listener calls renderAll.
                 // We can check if modal is open and refresh it.
                 // Let's add a global listener for that.
-                bootstrap.Modal.getOrCreateInstance(document.getElementById('approvalModal')).hide();
-                // Re-opening is annoying. Let's just hide for now.
+                // bootstrap.Modal.getOrCreateInstance(document.getElementById('approvalModal')).hide();
+                // Do not hide. The list will refresh via the snapshot listener -> renderAll -> refreshModal invocation.
             } catch (e) {
                 console.error(e);
                 alert("操作失敗: " + e.message);
             }
         };
+
+        // Helper to refresh modal list if open
+        function refreshApprovalModal() {
+            const modalEl = document.getElementById('approvalModal');
+            if (modalEl && modalEl.classList.contains('show')) {
+                // Re-use logic from showApprovalModal but only update list
+                const list = document.getElementById('approvalList');
+                const relevant = getRelevantRequests();
+                if (relevant.length === 0) {
+                    list.innerHTML = `<div class="text-center p-4 text-muted">目前沒有待審核的申請</div>`;
+                } else {
+                    list.innerHTML = relevant.map(req => `
+                    <div class="list-group-item d-flex justify-content-between align-items-center">
+                        <div>
+                            <div class="d-flex align-items-center mb-1">
+                                <span class="fw-bold me-2">${req.studentName}</span>
+                                <span class="badge bg-light text-secondary border me-2">${req.studentClass}/${req.studentGroup}</span>
+                                <span class="badge bg-warning text-dark">${req.dayName || ''} ${req.sessionName}</span>
+                            </div>
+                            <div class="small">
+                                <span class="text-muted">由 ${req.requesterName} 申請：</span>
+                                <span class="text-decoration-line-through text-muted mx-1">${req.originStatus}</span>
+                                <i class="bi bi-arrow-right mx-1"></i>
+                                <span class="fw-bold text-danger">${req.newStatus}</span>
+                            </div>
+                            <div class="text-muted" style="font-size: 0.75rem;">${new Date(req.timestamp).toLocaleString()}</div>
+                        </div>
+                        <div class="d-flex align-items-center">
+                            <button class="btn btn-success btn-sm me-2" onclick="handleRequest('${req.id}', 'approve')">
+                                <i class="bi bi-check-lg"></i> 批准
+                            </button>
+                            <button class="btn btn-outline-danger btn-sm" onclick="handleRequest('${req.id}', 'reject')">
+                                <i class="bi bi-x-lg"></i> 駁回
+                            </button>
+                        </div>
+                    </div>
+                `).join('');
+                }
+            }
+        }
 
         window.cancelRequest = async (reqId) => {
             if (!confirm("確定要取消此變更申請嗎？")) return;
