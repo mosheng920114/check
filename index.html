@@ -451,7 +451,7 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-        import { getFirestore, collection, addDoc, onSnapshot, doc, updateDoc, deleteDoc, query, setDoc, getDocs } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+        import { getFirestore, collection, addDoc, onSnapshot, doc, updateDoc, deleteDoc, query, setDoc, getDocs, deleteField } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyACL_67nXJU6RZEf3InFqHQJ-5h6FMZ7t8",
@@ -476,6 +476,18 @@
         let currentDay = days[0];
         let currentGroupMode = "class";
         let currentStatuses = ["實到", "遲到", "缺席"];
+
+        // Define Orders Globally for reuse
+        const classOrder = [
+            "01班", "02班", "03班", "04班", "05班", "06班",
+            "07班", "08班", "09班", "10班", "11班", "12班",
+            "中隊部", "參謀", "區隊部"
+        ];
+        const groupOrder = [
+            "115一般組", "115結構組", "115發修組", "115航設組",
+            "116一般組", "116結構組", "116發修組", "116航設組",
+            "專軍"
+        ];
 
         let studentsData = [];
         let pendingRequests = []; // Store active requests
@@ -611,7 +623,12 @@
                     renderAll();
                 }
             } else {
-                setDoc(configRef, { statuses: ["實到", "遲到", "缺席", "病假", "事假", "公假"] });
+                // Document doesn't exist -> Use defaults locally but DO NOT overwrite DB automatically
+                // This prevents accidental resets if connection is flaky or doc is temporarily unavailable
+                console.warn("Config document not found. Using default statuses.");
+                currentStatuses = ["實到", "遲到", "缺席", "病假", "事假", "公假"];
+                renderStatusSettings();
+                renderAll();
             }
         });
 
@@ -822,17 +839,7 @@
                 return;
             }
 
-            // Custom Sort Orders
-            const classOrder = [
-                "一班", "二班", "三班", "四班", "五班", "六班",
-                "七班", "八班", "九班", "十班", "十一班", "十二班",
-                "中隊部", "參謀", "區隊部"
-            ];
-            const groupOrder = [
-                "115一般組", "115結構組", "115發修組", "115航設組",
-                "116一般組", "116結構組", "116發修組", "116航設組",
-                "專軍"
-            ];
+            // Custom Sort Orders used from global scope
 
             const sortedKeys = Object.keys(grouped).sort((a, b) => {
                 const order = currentGroupMode === 'class' ? classOrder : groupOrder;
@@ -1258,9 +1265,9 @@
         function renderSearchTags() {
             const container = document.getElementById('searchTagsContainer');
             container.innerHTML = searchTags.map((tag, index) => `
-                <span class="badge bg-primary d-flex align-items-center">
+                <span class="badge bg-primary d-flex align-items-center p-2 fs-6 me-2 mb-2">
                     ${tag}
-                    <i class="bi bi-x ms-2" onclick="removeSearchTag(${index})" style="cursor: pointer;"></i>
+                    <i class="bi bi-x ms-2 p-1" onclick="removeSearchTag(${index})" style="cursor: pointer; font-size: 1.1em;"></i>
                 </span>
             `).join('');
         }
@@ -1368,7 +1375,14 @@
                 return `
                     <tr>
                         <td>${s.name}</td>
-                        <td>${s.class} <small class="text-muted">(${s.group || '-'})</small></td>
+                        <td>
+                             <div class="d-flex align-items-center">
+                                <select class="form-select form-select-sm me-1" onchange="updateUserClass('${s.id}', this.value)" style="width: auto; min-width: 80px;">
+                                    ${classOrder.map(c => `<option value="${c}" ${s.class === c ? 'selected' : ''}>${c}</option>`).join('')}
+                                </select>
+                                <small class="text-muted text-nowrap">(${s.group || '-'})</small>
+                            </div>
+                        </td>
                         <td>
                             <select class="form-select form-select-sm" onchange="updateUserRole('${s.id}', this.value)">
                                 ${roleOptions.map(opt => `<option value="${opt.val}" ${currentRole === opt.val ? 'selected' : ''}>${opt.label}</option>`).join('')}
@@ -1381,6 +1395,27 @@
                 `;
             }).join('');
         };
+
+        window.updateUserClass = async (uid, newClass) => {
+            if (currentUser.role !== 'super_admin' && currentUser.role !== 'general_admin') {
+                alert("您沒有權限執行此操作。");
+                renderAdminUserList(); // Revert UI
+                return;
+            }
+            try {
+                await updateDoc(doc(db, "students", uid), { class: newClass });
+                // Optimistic update
+                const student = studentsData.find(s => s.id === uid);
+                if (student) student.class = newClass;
+                // Render list again isn't strictly necessary if optimistic update works, 
+                // but good for consistency. However, onchange already changed the UI.
+            } catch (e) {
+                console.error(e);
+                alert("更新班級失敗: " + e.message);
+                renderAdminUserList(); // Revert on fail
+            }
+        };
+
 
         window.updateUserRole = async (uid, newRole) => {
             if (currentUser.role !== 'super_admin') {
@@ -1461,7 +1496,7 @@
                 list.innerHTML = `<div class="text-center p-4 text-muted">目前沒有待審核的申請</div>`;
             } else {
                 list.innerHTML = relevant.map(req => `
-                    <div class="list-group-item d-flex justify-content-between align-items-center">
+            <div class="list-group-item d-flex justify-content-between align-items-center">
                         <div>
                             <div class="d-flex align-items-center mb-1">
                                 <span class="fw-bold me-2">${req.studentName}</span>
@@ -1485,7 +1520,7 @@
                             </button>
                         </div>
                     </div>
-                `).join('');
+            `).join('');
             }
             bootstrap.Modal.getOrCreateInstance(document.getElementById('approvalModal')).show();
         };
@@ -1501,7 +1536,7 @@
                 for (const req of relevant) {
                     if (action === 'approve') {
                         const studentRef = doc(db, "students", req.studentId);
-                        await updateDoc(studentRef, { [`status.${req.targetSession}`]: req.newStatus });
+                        await updateDoc(studentRef, { [`status.${req.targetSession} `]: req.newStatus });
                     }
                     await deleteDoc(doc(db, "requests", req.id));
                     count++;
@@ -1522,7 +1557,7 @@
                 if (action === 'approve') {
                     // 1. Update Student Data
                     const studentRef = doc(db, "students", req.studentId);
-                    await updateDoc(studentRef, { [`status.${req.targetSession}`]: req.newStatus });
+                    await updateDoc(studentRef, { [`status.${req.targetSession} `]: req.newStatus });
 
                     // 2. Delete Request (or update to approved)
                     await deleteDoc(doc(db, "requests", reqId));
@@ -1556,7 +1591,7 @@
                     list.innerHTML = `<div class="text-center p-4 text-muted">目前沒有待審核的申請</div>`;
                 } else {
                     list.innerHTML = relevant.map(req => `
-                    <div class="list-group-item d-flex justify-content-between align-items-center">
+            <div class="list-group-item d-flex justify-content-between align-items-center">
                         <div>
                             <div class="d-flex align-items-center mb-1">
                                 <span class="fw-bold me-2">${req.studentName}</span>
@@ -1580,7 +1615,7 @@
                             </button>
                         </div>
                     </div>
-                `).join('');
+            `).join('');
                 }
             }
         }
@@ -1598,7 +1633,7 @@
 
         window.initLogin = (studentId, studentName) => {
             if (currentUser) return; // Already logged in
-            document.getElementById('loginTargetName').innerText = `登入：${studentName}`;
+            document.getElementById('loginTargetName').innerText = `登入：${studentName} `;
             document.getElementById('loginTargetName').dataset.id = studentId; // Restore missing ID setting
             document.getElementById('loginPassword').value = '';
             document.getElementById('loginError').innerText = '';
@@ -1768,8 +1803,45 @@
             if (!s || s === '實到') return "text-primary";
             return "text-danger fw-bolder";
         }
+        window.migrateOldClasses = async () => {
+            if (!confirm("確定要執行「舊班級名稱 -> 新班級名稱」的資料遷移嗎？\n此操作將會更新所有學生的班級欄位。")) return;
+
+            const mapping = {
+                "一班": "01班", "二班": "02班", "三班": "03班", "四班": "04班",
+                "五班": "05班", "六班": "06班", "七班": "07班", "八班": "08班",
+                "九班": "09班", "十班": "10班", "十一班": "11班", "十二班": "12班"
+            };
+
+            let updateCount = 0;
+            const updates = [];
+
+            studentsData.forEach(s => {
+                if (mapping[s.class]) {
+                    const newClass = mapping[s.class];
+                    // console.log(`Migrating ${s.name}: ${s.class} -> ${newClass}`);
+                    updates.push(updateDoc(doc(db, "students", s.id), { class: newClass }));
+                    updateCount++;
+                }
+            });
+
+            if (updateCount === 0) {
+                alert("沒有發現需要遷移的資料。");
+                return;
+            }
+
+            try {
+                await Promise.all(updates);
+                alert(`遷移完成！共更新了 ${updateCount} 筆資料。\n請重新整理網頁。`);
+                location.reload();
+            } catch (e) {
+                console.error(e);
+                alert("遷移過程發生錯誤：" + e.message);
+            }
+        };
+
         function renderStatusSettings() {
             const canManage = currentUser && ['super_admin', 'general_admin', 'class_admin', 'group_admin'].includes(currentUser.role);
+            const isSuperOrGeneral = currentUser && ['super_admin', 'general_admin'].includes(currentUser.role);
 
             const addContainer = document.getElementById('addStatusContainer');
             if (addContainer) {
@@ -1777,9 +1849,11 @@
                 else addContainer.classList.add('d-none');
             }
 
-            document.getElementById('statusListContainer').innerHTML = currentStatuses.map(s => `
-                <div class="custom-status-tag border rounded px-2 py-1 bg-light">${s} ${(s !== '實到' && canManage) ? `<span role="button" class="text-danger ms-2 fw-bold" onclick="removeStatusType('${s}')">&times;</span>` : ''}</div>
+            let html = currentStatuses.map(s => `
+            <div class="custom-status-tag border rounded px-2 py-1 bg-light">${s} ${(s !== '實到' && canManage) ? `<span role="button" class="text-danger ms-2 fw-bold" onclick="removeStatusType('${s}')">&times;</span>` : ''}</div>
             `).join('');
+
+            document.getElementById('statusListContainer').innerHTML = html;
         }
 
         // Enable Drag to Scroll & Wheel to Scroll
