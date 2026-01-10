@@ -334,7 +334,7 @@
                 <div class="modal-body">
                     <p id="loginTargetName" class="fw-bold text-center fs-5 mb-3"></p>
                     <input type="password" id="loginPassword" class="form-control text-center mb-3"
-                        placeholder="請輸入密碼 (預設0000)">
+                        placeholder="請輸入密碼 (預設0000)" onkeydown="if(event.key==='Enter') performLogin()">
                     <p id="loginError" class="text-danger small text-center mb-0"></p>
                 </div>
                 <div class="modal-footer justify-content-center">
@@ -354,10 +354,12 @@
                 </div>
                 <div class="modal-body">
                     <div class="mb-3">
-                        <input type="text" id="adminUsername" class="form-control" placeholder="帳號">
+                        <input type="text" id="adminUsername" class="form-control" placeholder="帳號"
+                            onkeydown="if(event.key==='Enter') document.getElementById('adminPassword').focus()">
                     </div>
                     <div class="mb-3">
-                        <input type="password" id="adminPassword" class="form-control" placeholder="密碼">
+                        <input type="password" id="adminPassword" class="form-control" placeholder="密碼"
+                            onkeydown="if(event.key==='Enter') performAdminLogin()">
                     </div>
                     <p id="adminLoginError" class="text-danger small text-center mb-0"></p>
                 </div>
@@ -407,22 +409,7 @@
                 </div>
                 <div class="modal-body">
                     <div class="input-group mb-3">
-                        <select id="adminClassFilter" class="form-select" style="max-width: 200px;"
-                            onchange="renderAdminUserList()">
-                            <option value="all">所有班級/組別</option>
-                        </select>
-                        <script>
-                            (function () {
-                                const sel = document.getElementById('adminClassFilter');
-                                if (sel) {
-                                    const opts = [
-                                        ...classOrder.map(c => `<option value="${c}">${c}</option>`),
-                                        ...groupOrder.map(g => `<option value="${g}">${g}</option>`)
-                                    ];
-                                    sel.innerHTML += opts.join('');
-                                }
-                            })();
-                        </script>
+
                         <span class="input-group-text"><i class="bi bi-search"></i></span>
                         <input type="text" id="adminUserSearch" class="form-control" placeholder="搜尋姓名、班級、組別或權限..."
                             oninput="renderAdminUserList()">
@@ -434,7 +421,13 @@
                                     <th>姓名</th>
                                     <th>班級 / 組別</th>
                                     <th>權限角色</th>
-                                    <th>操作</th>
+                                    <th>
+                                        操作
+                                        <button id="deleteAllBtn" class="btn btn-danger btn-sm ms-2 d-none"
+                                            onclick="deleteAllUsers()">
+                                            <i class="bi bi-trash-fill"></i> 一鍵刪除全部
+                                        </button>
+                                    </th>
                                 </tr>
                             </thead>
                             <tbody id="adminUserListBody">
@@ -479,6 +472,29 @@
                     <button type="button" class="btn btn-primary" onclick="executeExport()">
                         <i class="bi bi-clipboard me-1"></i> 確認複製
                     </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scope Config Modal -->
+    <div class="modal fade" id="scopeConfigModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header bg-warning text-dark">
+                    <h5 class="modal-title fw-bold">設定管轄範圍</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <input type="hidden" id="scopeTargetId">
+                    <p class="text-muted small">請勾選該人員可管理的班級：</p>
+                    <div id="scopeClassList" class="d-flex flex-wrap gap-2">
+                        <!-- JS Generated Checkboxes -->
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                    <button type="button" class="btn btn-primary" onclick="saveScopeConfig()">儲存設定</button>
                 </div>
             </div>
         </div>
@@ -770,6 +786,26 @@
                 if (a.class !== b.class) return a.class.localeCompare(b.class);
                 return (a.timestamp?.seconds || 0) - (b.timestamp?.seconds || 0);
             });
+
+            // Sync currentUser permissions if logged in
+            if (currentUser) {
+                const me = studentsData.find(s => s.id === currentUser.id);
+                if (me) {
+                    // Update key permission fields
+                    currentUser.role = me.role || 'student';
+                    currentUser.managedClasses = me.managedClasses;
+                    currentUser.group = me.group;
+                    currentUser.class = me.class;
+                    currentUser.customRoleTitle = me.customRoleTitle;
+
+                    // Update Session Storage
+                    sessionStorage.setItem('currentUser', JSON.stringify(currentUser));
+
+                    // Refresh Auth UI (e.g. for Admin Link visibility)
+                    if (typeof updateAuthUI === 'function') updateAuthUI();
+                }
+            }
+
             try { renderAll(); } catch (err) { console.error(err); }
         });
 
@@ -1026,6 +1062,8 @@
                             } else if (currentUser.id === student.id) {
                                 canEdit = true;
                             }
+                        } else if (currentUser.role === 'district_admin' && currentUser.managedClasses && currentUser.managedClasses.includes(student.class)) {
+                            canEdit = true;
                         } else { // student
                             if (currentUser.id === student.id) canEdit = true;
                         }
@@ -1060,22 +1098,18 @@
                         </td>
                         <td>${statusDisplay}</td>
                         <td>
-                            <select class="form-select form-select-sm fw-bold ${getStatusColorClass(student._currentStatus)}" 
-                                    onchange="updateStatus('${student.id}', this.value)" 
-                                    style="min-width: 110px;"
-                                    ${canEdit ? '' : 'disabled'}>
-                                ${currentStatuses.map(s => {
-                        const sClean = stripStatusHtml(s);
-                        return `<option value="${s}" ${student._currentStatus === sClean ? 'selected' : ''}>${sClean}</option>`;
-                    }).join('')}
-                            </select>
-                        </td>
-                         <td class="text-end">
                             ${(pendingReq && currentUser && (currentUser.id === pendingReq.requesterId || currentUser.role === 'super_admin')) ?
-                            `<button class="btn btn-sm btn-outline-danger" onclick="cancelRequest('${pendingReq.id}')" title="取消申請"><i class="bi bi-x-lg"></i></button>` :
-                            (canDelete ? `<button class="btn btn-sm btn-light text-danger" onclick="removeStudent('${student.id}')"><i class="bi bi-trash"></i></button>` : '')
-                        }
+                            `<button class="btn btn-sm btn-outline-danger" onclick="cancelRequest('${pendingReq.id}')">取消申請</button>` :
+                            (canEdit ? `<select class="form-select form-select-sm fw-bold ${getStatusColorClass(student._currentStatus)}" 
+                                    onchange="updateStatus('${student.id}', this.value)" 
+                                    style="min-width: 110px;">
+                                ${currentStatuses.map(s => {
+                                const sClean = stripStatusHtml(s);
+                                return `<option value="${s}" ${student._currentStatus === sClean ? 'selected' : ''}>${sClean}</option>`;
+                            }).join('')}
+                            </select>` : '')}
                         </td>
+ 
                     </tr>
                 `}).join('');
 
@@ -1100,7 +1134,7 @@
                                     <div class="text-white opacity-90">${classDetailHtml}</div>
                                 </div>
                             </div>
-                            <div class="card-body p-0"><div class="table-responsive"><table class="table table-hover align-middle mb-0"><thead class="table-light"><tr><th style="width: 25%">姓名</th><th style="width: 15%">狀態</th><th>操作</th><th style="width: 10%"></th></tr></thead><tbody>${rows}</tbody></table></div></div>
+                            <div class="card-body p-0"><div class="table-responsive"><table class="table table-hover align-middle mb-0"><thead class="table-light"><tr><th style="width: 30%">姓名</th><th style="width: 20%">狀態</th><th>更改狀態</th></tr></thead><tbody>${rows}</tbody></table></div></div>
                         </div>
                     </div>
                 `;
@@ -1213,6 +1247,8 @@
                     canDirectlyUpdate = true;
                 }
                 // Note: Self-update for students/admins outside their scope defaults to Request.
+            } else if (currentUser.role === 'district_admin' && currentUser.managedClasses && currentUser.managedClasses.includes(student.class)) {
+                canDirectlyUpdate = true;
             }
 
             const statusKey = getStatusKey(currentSession);
@@ -1257,14 +1293,14 @@
             if (confirm('確定刪除？')) await deleteDoc(doc(db, "students", id));
         };
         window.addNewStatusType = async () => {
-            if (!currentUser || !['super_admin', 'general_admin', 'class_admin', 'group_admin'].includes(currentUser.role)) return alert("權限不足");
+            if (!currentUser || !['super_admin', 'general_admin', 'class_admin', 'group_admin', 'district_admin'].includes(currentUser.role)) return alert("權限不足");
             const val = document.getElementById('newStatusInput').value.trim();
             if (!val || currentStatuses.includes(val)) return;
             await updateDoc(configRef, { statuses: [...currentStatuses, val] });
             document.getElementById('newStatusInput').value = '';
         };
         window.removeStatusType = async (val) => {
-            if (!currentUser || !['super_admin', 'general_admin', 'class_admin', 'group_admin'].includes(currentUser.role)) return alert("權限不足");
+            if (!currentUser || !['super_admin', 'general_admin', 'class_admin', 'group_admin', 'district_admin'].includes(currentUser.role)) return alert("權限不足");
             if (confirm(`移除 ${val}?`)) await updateDoc(configRef, { statuses: currentStatuses.filter(s => s !== val) });
         };
 
@@ -1306,6 +1342,9 @@
                     const isDining = (currentSession === '中午上餐廳' || currentSession === '晚上上餐廳');
                     if (isDining) canReset = true;
                 }
+            }
+            if (currentUser.role === 'district_admin' && currentUser.managedClasses && currentUser.managedClasses.includes(groupName)) {
+                canReset = true;
             }
 
             if (!canReset) return alert("權限不足");
@@ -1448,9 +1487,10 @@
                 // Priority: Custom Title > Role Mapping
                 if (currentUser.customRoleTitle) {
                     roleName = currentUser.customRoleTitle;
-                    if (['super_admin', 'general_admin'].includes(currentUser.role)) isAdmin = true;
+                    if (['super_admin', 'general_admin', 'district_admin'].includes(currentUser.role)) isAdmin = true;
                 } else if (currentUser.role === 'super_admin') { roleName = "超級管理員"; isAdmin = true; }
                 else if (currentUser.role === 'general_admin') { roleName = "管理員"; isAdmin = true; }
+                else if (currentUser.role === 'district_admin') { roleName = "實習區隊長"; isAdmin = true; } // New Role
                 else if (currentUser.role === 'class_admin') { roleName = "實習幹部"; isAdmin = true; }
                 else if (currentUser.role === 'group_admin') { roleName = "組別班代"; isAdmin = true; }
 
@@ -1463,7 +1503,7 @@
                     notificationBtn.classList.add('d-none');
                 }
 
-                if (currentUser.role === 'super_admin' || currentUser.role === 'general_admin') {
+                if (currentUser.role === 'super_admin') {
                     adminManageLink.classList.remove('d-none');
                 } else {
                     adminManageLink.classList.add('d-none');
@@ -1471,7 +1511,7 @@
 
                 // Control Add Student Button visibility
                 const addStudentBtn = document.getElementById('addStudentBtn');
-                if (currentUser.role === 'super_admin' || currentUser.role === 'general_admin') {
+                if (currentUser.role === 'super_admin') {
                     addStudentBtn.classList.remove('d-none');
                 } else {
                     addStudentBtn.classList.add('d-none');
@@ -1506,30 +1546,38 @@
         };
 
         window.renderAdminUserList = () => {
+            if (currentUser && currentUser.role === 'super_admin') {
+                const btn = document.getElementById('deleteAllBtn');
+                if (btn) btn.classList.remove('d-none');
+            }
             const tbody = document.getElementById('adminUserListBody');
             const term = document.getElementById('adminUserSearch').value.toLowerCase();
             const filterClass = document.getElementById('adminClassFilter') ? document.getElementById('adminClassFilter').value : 'all';
 
+            const roleOptions = [
+                { val: 'student', label: '學生' },
+                { val: 'group_admin', label: '組別班代' },
+                { val: 'class_admin', label: '實習幹部' },
+                { val: 'district_admin', label: '實習區隊長' }, // Added
+                { val: 'general_admin', label: '管理員' }
+            ];
+
             const filtered = studentsData.filter(s => {
+                const roleLabel = (roleOptions.find(r => r.val === (s.role || 'student')) || {}).label || '';
                 const matchesSearch = s.name.includes(term) ||
                     s.class.includes(term) ||
                     (s.group && s.group.includes(term)) ||
-                    (s.role || 'student').includes(term);
+                    (s.role || 'student').includes(term) ||
+                    roleLabel.includes(term);
 
                 const matchesFilter = filterClass === 'all' || s.class === filterClass || s.group === filterClass;
 
                 return matchesSearch && matchesFilter;
             });
 
-            const roleOptions = [
-                { val: 'student', label: '學生' },
-                { val: 'group_admin', label: '組別班代' },
-                { val: 'class_admin', label: '實習幹部' },
-                { val: 'general_admin', label: '管理員' }
-            ];
-
             tbody.innerHTML = filtered.map(s => {
                 const currentRole = s.role || 'student';
+                const isDistrict = currentRole === 'district_admin'; // Check for button
                 return `
                     <tr>
                         <td>${s.name}</td>
@@ -1542,12 +1590,16 @@
                             </div>
                         </td>
                         <td>
-                            <select class="form-select form-select-sm" onchange="updateUserRole('${s.id}', this.value)">
-                                ${roleOptions.map(opt => `<option value="${opt.val}" ${currentRole === opt.val ? 'selected' : ''}>${opt.label}</option>`).join('')}
-                            </select>
+                            <div class="d-flex align-items-center">
+                                <select class="form-select form-select-sm me-1" onchange="updateUserRole('${s.id}', this.value)" style="width: auto;">
+                                    ${roleOptions.map(opt => `<option value="${opt.val}" ${currentRole === opt.val ? 'selected' : ''}>${opt.label}</option>`).join('')}
+                                </select>
+                                ${isDistrict ? `<button class="btn btn-sm btn-outline-warning" onclick="openScopeConfigModal('${s.id}')"><i class="bi bi-gear"></i></button>` : ''}
+                            </div>
                         </td>
                         <td>
-                            <button class="btn btn-sm btn-outline-secondary" onclick="resetUserPassword('${s.id}', '${s.name}')">重置密碼</button>
+                            <button class="btn btn-sm btn-outline-secondary me-1" onclick="resetUserPassword('${s.id}', '${s.name}')">重置密碼</button>
+                            <button class="btn btn-sm btn-outline-danger" onclick="removeStudent('${s.id}')">刪除</button>
                         </td>
                     </tr>
                 `;
@@ -1601,28 +1653,122 @@
             }
         };
 
+        window.deleteAllUsers = async () => {
+            if (currentUser.role !== 'super_admin') {
+                alert("權限不足");
+                return;
+            }
+
+            if (!confirm("⚠️嚴重警告⚠️\n\n您即將刪除「所有」使用者資料！\n此操作「無法復原」！\n\n確定要繼續嗎？")) return;
+            if (!confirm("🔴第二次確認🔴\n\n真的要刪除全部人員嗎？\n請確認您真的知道自己在做什麼！")) return;
+            const input = prompt("🔥最終確認🔥\n\n請輸入 'DELETE' (全大寫) 以執行刪除：");
+
+            if (input !== 'DELETE') {
+                alert("輸入不正確，已取消操作。");
+                return;
+            }
+
+            try {
+                const snapshot = await getDocs(collection(db, "students"));
+                const total = snapshot.size;
+                if (total === 0) {
+                    alert("目前沒有任何使用者資料。");
+                    return;
+                }
+
+                let batch = writeBatch(db);
+                let count = 0;
+                let batchCount = 0;
+
+                for (const docSnap of snapshot.docs) {
+                    batch.delete(docSnap.ref);
+                    count++;
+                    if (count >= 400) { // Safety limit for batch
+                        await batch.commit();
+                        batch = writeBatch(db);
+                        count = 0;
+                        batchCount++;
+                    }
+                }
+                if (count > 0) {
+                    await batch.commit();
+                }
+
+                alert(`已成功刪除 ${total} 筆使用者資料。`);
+                studentsData = []; // Clear local
+                renderAll();
+                renderAdminUserList();
+
+            } catch (e) {
+                console.error("Batch delete failed: ", e);
+                alert("刪除失敗: " + e.message);
+            }
+        };
+
         function getRelevantRequests() {
             if (!currentUser) return [];
             return pendingRequests.filter(req => {
                 if (req.status !== 'pending') return false;
 
                 if (currentUser.role === 'super_admin' || currentUser.role === 'general_admin') return true;
+
                 if (currentUser.role === 'class_admin') {
                     return req.studentClass === currentUser.class;
                 }
+
                 if (currentUser.role === 'group_admin') {
-                    // Only dining sessions for Group Admin? Or all? 
-                    // Plan: "Group Admin approval rights restricted to dining sessions."
-                    // Let's implement that strict check.
-                    // Wait, req contains `targetSession` (key) and `sessionName`.
-                    // Check if sessionName contains "餐廳" ?
                     const isDining = (req.sessionName === '中午上餐廳' || req.sessionName === '晚上上餐廳');
                     if (isDining && req.studentGroup === currentUser.group) return true;
-                    // Else: Cannot approve. 
+                    return false;
                 }
+
+                if (currentUser.role === 'district_admin') {
+                    if (currentUser.managedClasses && currentUser.managedClasses.includes(req.studentClass)) {
+                        return true;
+                    }
+                }
+
                 return false;
             });
         }
+
+
+        window.openScopeConfigModal = (uid) => {
+            const student = studentsData.find(s => s.id === uid);
+            if (!student) return;
+            document.getElementById('scopeTargetId').value = uid;
+
+            const currentScopes = student.managedClasses || [];
+            const container = document.getElementById('scopeClassList');
+            // Render all classes as checkboxes
+            container.innerHTML = classOrder.map((c, i) => `
+            <div class="form-check form-check-inline">
+                <input class="form-check-input" type="checkbox" id="scopeClass_${i}" value="${c}" ${currentScopes.includes(c) ? 'checked' : ''}>
+                <label class="form-check-label" for="scopeClass_${i}">${c}</label>
+            </div>
+        `).join('');
+
+            bootstrap.Modal.getOrCreateInstance(document.getElementById('scopeConfigModal')).show();
+        };
+
+        window.saveScopeConfig = async () => {
+            const uid = document.getElementById('scopeTargetId').value;
+            const checkedBoxes = document.querySelectorAll('#scopeClassList input[type="checkbox"]:checked');
+            const selectedClasses = Array.from(checkedBoxes).map(cb => cb.value);
+
+            try {
+                await updateDoc(doc(db, "students", uid), { managedClasses: selectedClasses });
+                // Optimistic update
+                const s = studentsData.find(st => st.id === uid);
+                if (s) s.managedClasses = selectedClasses;
+
+                alert("權限範圍已更新！");
+                bootstrap.Modal.getInstance(document.getElementById('scopeConfigModal')).hide();
+            } catch (e) {
+                console.error(e);
+                alert("更新失敗：" + e.message);
+            }
+        };
 
         function updateNotificationBadge() {
             const badge = document.getElementById('notificationBadge');
@@ -1849,7 +1995,9 @@
                     name: student.name,
                     role: student.role || 'student',
                     class: student.class,
-                    group: student.group
+                    group: student.group,
+                    managedClasses: student.managedClasses,
+                    customRoleTitle: student.customRoleTitle // Also ensure this is passed if needed
                 };
                 sessionStorage.setItem('currentUser', JSON.stringify(currentUser));
                 bootstrap.Modal.getOrCreateInstance(document.getElementById('loginModal')).hide();
