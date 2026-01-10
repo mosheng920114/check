@@ -131,38 +131,9 @@
     <div class="container py-3" style="max-width: 1000px;">
         <!-- Top Bar -->
         <div class="d-flex justify-content-between align-items-center mb-3 header-top">
-            <div class="d-flex align-items-center">
-                <div class="dropdown me-2">
-                    <button class="btn btn-dark dropdown-toggle fw-bold fs-4 border-0" type="button"
-                        id="squadronSelectorBtn" data-bs-toggle="dropdown" aria-expanded="false">
-                        <i class="bi bi-shield-shaded me-2"></i><span id="currentSquadronDisplay">一大一中</span>
-                    </button>
-                    <ul class="dropdown-menu shadow" style="max-height: 80vh; overflow-y: auto;">
-                        <li><a class="dropdown-item fw-bold bg-light" href="#" onclick="switchSquadron('一大隊')">一大隊
-                                (顯示全部)</a></li>
-                        <li><a class="dropdown-item" href="#" onclick="switchSquadron('一大隊大隊部')">一大隊大隊部</a></li>
-                        <li><a class="dropdown-item" href="#" onclick="switchSquadron('一大一中')">一大一中</a></li>
-                        <li><a class="dropdown-item" href="#" onclick="switchSquadron('一大二中')">一大二中</a></li>
-                        <li><a class="dropdown-item" href="#" onclick="switchSquadron('一大三中')">一大三中</a></li>
-                        <li><a class="dropdown-item" href="#" onclick="switchSquadron('一大四中')">一大四中</a></li>
-                        <li><a class="dropdown-item" href="#" onclick="switchSquadron('一大五中')">一大五中</a></li>
-                        <li><a class="dropdown-item" href="#" onclick="switchSquadron('一大六中')">一大六中</a></li>
-                        <li>
-                            <hr class="dropdown-divider">
-                        </li>
-                        <li><a class="dropdown-item fw-bold bg-light" href="#" onclick="switchSquadron('二大隊')">二大隊
-                                (顯示全部)</a></li>
-                        <li><a class="dropdown-item" href="#" onclick="switchSquadron('二大隊大隊部')">二大隊大隊部</a></li>
-                        <li><a class="dropdown-item" href="#" onclick="switchSquadron('二大一中')">二大一中</a></li>
-                        <li><a class="dropdown-item" href="#" onclick="switchSquadron('二大二中')">二大二中</a></li>
-                        <li><a class="dropdown-item" href="#" onclick="switchSquadron('二大三中')">二大三中</a></li>
-                        <li><a class="dropdown-item" href="#" onclick="switchSquadron('二大四中')">二大四中</a></li>
-                        <li><a class="dropdown-item" href="#" onclick="switchSquadron('二大五中')">二大五中</a></li>
-                        <li><a class="dropdown-item" href="#" onclick="switchSquadron('二大六中')">二大六中</a></li>
-                    </ul>
-                </div>
-            </div>
-
+            <h2 class="fw-bold text-primary m-0 d-flex align-items-center">
+                <i class="bi bi-pencil-square me-2"></i>點名系統
+            </h2>
             <div class="header-actions">
                 <!-- Right Side: Settings & Add -->
                 <div class="d-flex align-items-center flex-wrap">
@@ -204,11 +175,7 @@
                         </div>
                     </div>
 
-
-
                     <div class="btn-group me-1 me-md-2" role="group">
-                        <button class="btn btn-outline-primary px-2 px-md-3 text-nowrap"
-                            onclick="setGroupBy('squadron')">依中隊</button>
                         <button class="btn btn-outline-primary px-2 px-md-3 text-nowrap"
                             onclick="setGroupBy('class')">依班級</button>
                         <button class="btn btn-outline-primary px-2 px-md-3 text-nowrap"
@@ -219,7 +186,7 @@
                         onclick="showAddStudentModal()">
                         <i class="bi bi-person-plus-fill me-1"></i><span class="d-none d-sm-inline">新增</span>
                     </button>
-                    <button class="btn btn-outline-secondary" onclick="openSettingsModal()">
+                    <button class="btn btn-outline-secondary" data-bs-toggle="modal" data-bs-target="#settingsModal">
                         <i class="bi bi-gear-fill"></i>
                     </button>
                 </div>
@@ -296,32 +263,9 @@
                 </div>
                 <div class="modal-body">
                     <div class="row g-3">
-                        <div class="col-12">
-                            <div class="form-floating">
-                                <select id="inputSquadron" class="form-select">
-                                    <optgroup label="一大隊">
-                                        <option value="一大一中">一大一中</option>
-                                        <option value="一大二中">一大二中</option>
-                                        <option value="一大三中">一大三中</option>
-                                        <option value="一大四中">一大四中</option>
-                                        <option value="一大五中">一大五中</option>
-                                        <option value="一大六中">一大六中</option>
-                                    </optgroup>
-                                    <optgroup label="二大隊">
-                                        <option value="二大一中">二大一中</option>
-                                        <option value="二大二中">二大二中</option>
-                                        <option value="二大三中">二大三中</option>
-                                        <option value="二大四中">二大四中</option>
-                                        <option value="二大五中">二大五中</option>
-                                        <option value="二大六中">二大六中</option>
-                                    </optgroup>
-                                </select>
-                                <label for="inputSquadron">所屬中隊</label>
-                            </div>
-                        </div>
                         <div class="col-6">
                             <div class="form-floating"><input type="text" id="inputClass" class="form-control"
-                                    placeholder="班級"><label for="inputClass">班級 (例: 01班)</label></div>
+                                    placeholder="班級"><label for="inputClass">班級 (例: 101)</label></div>
                         </div>
                         <div class="col-6">
                             <div class="form-floating"><input type="text" id="inputGroup" class="form-control"
@@ -349,16 +293,9 @@
                         data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body">
-                    <div class="mb-3">
-                        <label class="form-label">設定對象</label>
-                        <select id="settingTargetScope" class="form-select" onchange="renderStatusSettings()">
-                            <!-- Populated via JS -->
-                        </select>
-                    </div>
-                    <div id="addStatusContainer" class="input-group mb-3">
-                        <input type="text" id="newStatusInput" class="form-control" placeholder="輸入新狀態名稱">
-                        <button class="btn btn-primary" onclick="addNewStatusType()">新增</button>
-                    </div>
+                    <div id="addStatusContainer" class="input-group mb-3"><input type="text" id="newStatusInput"
+                            class="form-control" placeholder="輸入新狀態名稱"><button class="btn btn-primary"
+                            onclick="addNewStatusType()">新增</button></div>
                     <hr>
                     <h6>目前可用狀態:</h6>
                     <div id="statusListContainer" class="d-flex flex-wrap"></div>
@@ -375,10 +312,9 @@
                         data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body">
-                    <div class="alert alert-info small">格式：<strong>中隊 班級 組別 姓名</strong> (中間空白)<br>範例：<br>一大一中 03班 A組
-                        王小明<br>(若只輸入三欄，則預設為目前所在中隊)
+                    <div class="alert alert-info small">格式：<strong>班級 組別 姓名</strong> (中間空白)<br>範例：<br>101 A組 王小明
                     </div>
-                    <textarea id="batchInput" class="form-control" rows="10" placeholder="一大一中 03班 A組 王小明"></textarea>
+                    <textarea id="batchInput" class="form-control" rows="10" placeholder="101 A組 王小明"></textarea>
                 </div>
                 <div class="modal-footer"><button type="button" class="btn btn-secondary"
                         data-bs-dismiss="modal">取消</button><button type="button" class="btn btn-primary"
@@ -398,7 +334,7 @@
                 <div class="modal-body">
                     <p id="loginTargetName" class="fw-bold text-center fs-5 mb-3"></p>
                     <input type="password" id="loginPassword" class="form-control text-center mb-3"
-                        placeholder="請輸入密碼 (預設0000)" onkeydown="if(event.key === 'Enter') performLogin()">
+                        placeholder="請輸入密碼 (預設0000)">
                     <p id="loginError" class="text-danger small text-center mb-0"></p>
                 </div>
                 <div class="modal-footer justify-content-center">
@@ -418,12 +354,10 @@
                 </div>
                 <div class="modal-body">
                     <div class="mb-3">
-                        <input type="text" id="adminUsername" class="form-control" placeholder="帳號"
-                            onkeydown="if(event.key === 'Enter') document.getElementById('adminPassword').focus()">
+                        <input type="text" id="adminUsername" class="form-control" placeholder="帳號">
                     </div>
                     <div class="mb-3">
-                        <input type="password" id="adminPassword" class="form-control" placeholder="密碼"
-                            onkeydown="if(event.key === 'Enter') performAdminLogin()">
+                        <input type="password" id="adminPassword" class="form-control" placeholder="密碼">
                     </div>
                     <p id="adminLoginError" class="text-danger small text-center mb-0"></p>
                 </div>
@@ -461,76 +395,37 @@
                 </div>
             </div>
         </div>
+    </div>
 
-        <!-- Role Config Modal -->
-        <div class="modal fade" id="roleConfigModal" tabindex="-1">
-            <div class="modal-dialog modal-dialog-centered">
-                <div class="modal-content">
-                    <div class="modal-header bg-info text-dark">
-                        <h5 class="modal-title fw-bold">權限詳細設定</h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                    </div>
-                    <div class="modal-body">
-                        <input type="hidden" id="configTargetId">
-                        <input type="hidden" id="configTargetRole">
-
-                        <p id="configTargetName" class="fw-bold mb-3"></p>
-
-                        <!-- Battalion Admin Config -->
-                        <div id="battalionConfig" class="role-config-section d-none">
-                            <label class="form-label">管理大隊</label>
-                            <select id="configBattalion" class="form-select">
-                                <option value="一大隊">一大隊</option>
-                                <option value="二大隊">二大隊</option>
-                            </select>
-                        </div>
-
-                        <!-- District Admin Config -->
-                        <div id="districtConfig" class="role-config-section d-none">
-                            <label class="form-label">管理班級 (可多選)</label>
-                            <div id="configClassList" class="border rounded p-2"
-                                style="max-height: 200px; overflow-y: auto;">
-                                <!-- Checkboxes populated via JS -->
-                            </div>
-                        </div>
-
-                        <!-- Squadron Admin / Duty Class (Just info) -->
-                        <div id="squadronConfig" class="role-config-section d-none">
-                            <div class="alert alert-warning small">
-                                此角色將自動綁定該員所屬的中隊：<span id="configSquadronDisplay" class="fw-bold"></span>
-                                <br>若要變更管理中隊，請直接修改該員的「所屬中隊」欄位。
-                            </div>
-                        </div>
-
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
-                        <button type="button" class="btn btn-primary" onclick="saveRoleConfig()">確認儲存</button>
-                    </div>
+    <!-- Admin Dashboard Modal -->
+    <div class="modal fade" id="adminDashboardModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered modal-xl modal-dialog-scrollable">
+            <div class="modal-content">
+                <div class="modal-header bg-dark text-white">
+                    <h5 class="modal-title"><i class="bi bi-shield-lock-fill me-2"></i>人員權限管理</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
                 </div>
-            </div>
-        </div>
-
-        <!-- Admin Dashboard Modal -->
-        <div class="modal fade" id="adminDashboardModal" tabindex="-1">
-            <div class="modal-dialog modal-dialog-centered modal-xl">
-                <div class="modal-content">
-                    <div class="modal-header bg-dark text-white">
-                        <h5 class="modal-title"><i class="bi bi-shield-lock-fill me-2"></i>人員權限管理</h5>
-                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-                    </div>
-                    <div class="modal-body p-2">
-                        <div class="d-flex gap-2">
-                            <div class="input-group">
-                                <span class="input-group-text bg-white border-end-0"><i class="bi bi-search"></i></span>
-                                <input type="text" id="adminUserSearch" class="form-control border-start-0"
-                                    placeholder="搜尋姓名、班級、組別或權限..." onkeyup="renderAdminUserList()">
-                            </div>
-                            <button id="deleteAllBtn" class="btn btn-danger text-nowrap d-none"
-                                onclick="deleteAllUsers()">
-                                <i class="bi bi-trash-fill me-1"></i>全部刪除
-                            </button>
-                        </div>
+                <div class="modal-body">
+                    <div class="input-group mb-3">
+                        <select id="adminClassFilter" class="form-select" style="max-width: 200px;"
+                            onchange="renderAdminUserList()">
+                            <option value="all">所有班級/組別</option>
+                        </select>
+                        <script>
+                            (function () {
+                                const sel = document.getElementById('adminClassFilter');
+                                if (sel) {
+                                    const opts = [
+                                        ...classOrder.map(c => `<option value="${c}">${c}</option>`),
+                                        ...groupOrder.map(g => `<option value="${g}">${g}</option>`)
+                                    ];
+                                    sel.innerHTML += opts.join('');
+                                }
+                            })();
+                        </script>
+                        <span class="input-group-text"><i class="bi bi-search"></i></span>
+                        <input type="text" id="adminUserSearch" class="form-control" placeholder="搜尋姓名、班級、組別或權限..."
+                            oninput="renderAdminUserList()">
                     </div>
                     <div class="table-responsive">
                         <table class="table table-hover align-middle">
@@ -623,19 +518,19 @@
         import { getFirestore, collection, addDoc, onSnapshot, doc, updateDoc, deleteDoc, query, setDoc, getDocs, deleteField } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
         const firebaseConfig = {
-            apiKey: "AIzaSyDfAu3HoMEqtYwOg1_P0qNOOJye2dKhw0I",
-            authDomain: "airforce-5b199.firebaseapp.com",
-            projectId: "airforce-5b199",
-            storageBucket: "airforce-5b199.firebasestorage.app",
-            messagingSenderId: "433246436314",
-            appId: "1:433246436314:web:7db072cd7c01c665c61ee3",
-            measurementId: "G-LK50GN8KCF"
+            apiKey: "AIzaSyACL_67nXJU6RZEf3InFqHQJ-5h6FMZ7t8",
+            authDomain: "check-74ee8.firebaseapp.com",
+            projectId: "check-74ee8",
+            storageBucket: "check-74ee8.firebasestorage.app",
+            messagingSenderId: "795590503656",
+            appId: "1:795590503656:web:f68019efd5eb88aa51ed5d",
+            measurementId: "G-QMBN11NQ34"
         };
 
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
         const studentsRef = collection(db, "students");
-        const requestsRef = collection(db, "requests");
+        const requestsRef = collection(db, "requests"); // New collection for approval requests
         const configRef = doc(db, "settings", "globalConfig");
 
         const sessions = ["早點名", "早上上餐廳", "0740集合", "中午上餐廳", "1320集合", "晚上上餐廳", "晚自習", "晚點名", "備用點名"];
@@ -644,90 +539,14 @@
         let currentSession = sessions[0];
         let currentDay = days[0];
         let currentGroupMode = "class";
-        let currentSquadron = "一大一中";
+        let currentStatuses = ["實到", "遲到", "缺席"];
 
-        // Status Configuration
-        // Default global fallback
-        const DEFAULT_STATUSES = ["實到", "遲到", "缺席", "病假", "事假", "公假"];
-
-        // Cache for status configs: { "global": [...], "一大一中": [...], ... }
-        let statusConfigCache = {
-            "global": [...DEFAULT_STATUSES]
-        };
-
-        // Helper: Get status list for a specific squadron, falling back to global
-        function getStatusList(squadronName) {
-            if (squadronName && statusConfigCache[squadronName]) {
-                return statusConfigCache[squadronName];
-            }
-            return statusConfigCache["global"] || DEFAULT_STATUSES;
-        }
-
-        // Helper: Get configuration scope for current user (for settings modal)
-        function getEditableStatusScopes() {
-            if (!currentUser) return [];
-            const role = currentUser.role;
-            const scopes = [];
-
-            if (role === 'super_admin' || role === 'general_admin') {
-                scopes.push({ val: 'global', label: '全域預設' });
-                // Add all squadrons
-                squadronOrder.forEach(sq => scopes.push({ val: sq, label: sq }));
-            } else if (role === 'battalion_admin' && currentUser.managedBattalion) {
-                // Add all in battalion
-                squadronOrder.filter(sq => getBattalionFromSquadron(sq) === currentUser.managedBattalion)
-                    .forEach(sq => scopes.push({ val: sq, label: sq }));
-            } else if (['squadron_admin', 'duty_class', 'class_admin'].includes(role)) {
-                // User allowed class_admin to edit their squadron settings too
-                if (currentUser.squadron) {
-                    scopes.push({ val: currentUser.squadron, label: currentUser.squadron });
-                }
-            }
-            return scopes;
-        }
-
-        // 3-Level Hierarchy
-        const battalionStructure = {
-            "一大隊": ["一大隊大隊部", "一大一中", "一大二中", "一大三中", "一大四中", "一大五中", "一大六中"],
-            "二大隊": ["二大隊大隊部", "二大一中", "二大二中", "二大三中", "二大四中", "二大五中", "二大六中"]
-        };
-
-        // Flatten for sorting
-        const squadronOrder = [
-            ...battalionStructure["一大隊"],
-            ...battalionStructure["二大隊"]
-        ];
-
-        // Permission & Role Definitions
-        const ROLE_DEFS = {
-            super_admin: { label: "超級管理員", type: "system" },
-            general_admin: { label: "值星官", type: "system" }, // Global execution
-            battalion_admin: { label: "大隊幹部", type: "battalion" }, // Manage specific battalion
-            squadron_admin: { label: "中隊幹部", type: "squadron" }, // Manage specific squadron
-            duty_class: { label: "值星班", type: "squadron" }, // Manage specific squadron
-            district_admin: { label: "實習區隊長", type: "district" }, // Manage specific classes
-            class_admin: { label: "實習幹部", type: "class" },
-            group_admin: { label: "組別負責人", type: "group" },
-            student: { label: "學生", type: "personal" }
-        };
-
-        function getBattalionFromSquadron(sq) {
-            if (!sq) return null;
-            if (battalionStructure["一大隊"].includes(sq)) return "一大隊";
-            if (battalionStructure["二大隊"].includes(sq)) return "二大隊";
-            return null;
-        }
-
-
-
-
-        // Level 3: Classes & Groups (Standardized across all squadrons)
+        // Define Orders Globally for reuse
         const classOrder = [
             "01班", "02班", "03班", "04班", "05班", "06班",
             "07班", "08班", "09班", "10班", "11班", "12班",
             "中隊部", "參謀", "區隊部"
         ];
-
         const groupOrder = [
             "115一般組", "115結構組", "115發修組", "115航設組",
             "116一般組", "116結構組", "116發修組", "116航設組",
@@ -994,17 +813,6 @@
             renderAll();
         };
 
-        window.switchSquadron = (sq) => {
-            currentSquadron = sq;
-            document.getElementById('currentSquadronDisplay').textContent = sq;
-            renderAll();
-        };
-
-        window.setGroupBy = (mode) => {
-            currentGroupMode = mode;
-            renderAll();
-        };
-
         function renderAll(searchTerm = '') {
             if (currentUser && typeof updateNotificationBadge === 'function') {
                 try { updateNotificationBadge(); } catch (e) { }
@@ -1015,25 +823,15 @@
             document.getElementById('currentSessionLabel').innerText = `(${currentDay} - ${currentSession})`;
             container.innerHTML = ""; globalStatsPanel.innerHTML = "";
 
-            // 1. Filter by Squadron First
-            let squadronStudents = [];
-            if (currentSquadron === "一大隊" || currentSquadron === "二大隊") {
-                // Show all squadrons in this battalion
-                const targetSquadrons = battalionStructure[currentSquadron];
-                squadronStudents = studentsData.filter(s => targetSquadrons.includes(s.squadron));
-            } else {
-                // Specific Squadron
-                squadronStudents = studentsData.filter(s => s.squadron === currentSquadron);
-            }
-
             // Filter Data
             let inputTerm = searchTerm ? searchTerm.toLowerCase().trim() : '';
+            // Get value from input directly if not passed (though oninput passes it)
             if (!inputTerm) {
                 const inputEl = document.getElementById('searchInput');
                 if (inputEl) inputTerm = inputEl.value.toLowerCase().trim();
             }
 
-            const displayedStudents = squadronStudents.filter(student => {
+            const displayedStudents = studentsData.filter(student => {
                 const sName = student.name.toLowerCase();
                 const sClass = student.class.toLowerCase();
                 const sGroup = (student.group || '').toLowerCase();
@@ -1045,7 +843,8 @@
                     sGroup.includes(inputTerm)
                 );
 
-                // 2. Check Tags
+                // 2. Check Tags (OR Logic - Match ANY tag)
+                // If no tags, ignore this check (true). If tags exist, must match at least one.
                 let matchesTags = true;
                 if (searchTags.length > 0) {
                     matchesTags = searchTags.some(tag => {
@@ -1054,11 +853,30 @@
                     });
                 }
 
+                // Final Decision: Must match Input (if any) AND Tags (if any)
+                // Wait, User requested "Accumulate results". 
+                // "Search 3rd Class -> Show. Then Search 4th Class -> Show Both."
+                // This implies tags should be combined with OR logic.
+                // Input term is "temporary tag".
+
+                // Logic Adjustment:
+                // If (Input matches OR match any Tag) -> Show.
+                // If NO input AND NO tags -> Show All.
+
                 if (!inputTerm && searchTags.length === 0) return true;
 
                 let hit = false;
-                if (inputTerm && matchesInput) hit = true;
-                if (!hit && searchTags.length > 0 && matchesTags) hit = true;
+                if (inputTerm && (sName.includes(inputTerm) || sClass.includes(inputTerm) || sGroup.includes(inputTerm))) {
+                    hit = true;
+                }
+                if (!hit && searchTags.length > 0) {
+                    if (searchTags.some(tag => {
+                        const t = tag.toLowerCase();
+                        return sName.includes(t) || sClass.includes(t) || sGroup.includes(t);
+                    })) {
+                        hit = true;
+                    }
+                }
                 return hit;
             });
 
@@ -1070,10 +888,7 @@
             });
 
             displayedStudents.forEach(student => {
-                let key;
-                if (currentGroupMode === 'class') key = student.class;
-                else if (currentGroupMode === 'squadron') key = student.squadron;
-                else key = student.group;
+                let key = currentGroupMode === 'class' ? student.class : student.group;
                 if (!key) key = "未分組";
                 if (!grouped[key]) {
                     // Initialize group stats with names array
@@ -1152,26 +967,14 @@
             globalStatsPanel.innerHTML = globalStatsHtml;
 
             if (Object.keys(grouped).length === 0) {
-                if (squadronStudents.length === 0) {
-                    container.innerHTML = `<div class="col-12 text-center text-muted py-5">
-                        <i class="bi bi-info-circle display-1 mb-3"></i>
-                        <p class="fs-4">目前「${currentSquadron}」沒有資料</p>
-                        <p>請點擊右上角「新增 (Add)」建立人員資料<br><small>(請記得選擇正確的中隊)</small></p>
-                     </div>`;
-                } else {
-                    container.innerHTML = `<div class="col-12 text-center text-muted py-5">找不到符合搜尋條件的資料</div>`;
-                }
+                container.innerHTML = `<div class="col-12 text-center text-muted py-5">目前沒有資料，請從上方新增。</div>`;
                 return;
             }
 
             // Custom Sort Orders used from global scope
 
             const sortedKeys = Object.keys(grouped).sort((a, b) => {
-                let order;
-                if (currentGroupMode === 'class') order = classOrder;
-                else if (currentGroupMode === 'squadron') order = squadronOrder;
-                else order = groupOrder;
-
+                const order = currentGroupMode === 'class' ? classOrder : groupOrder;
                 const indexA = order.indexOf(a);
                 const indexB = order.indexOf(b);
 
@@ -1185,131 +988,127 @@
             });
 
             sortedKeys.forEach(key => {
-                try {
-                    const groupName = key;
-                    const group = grouped[key];
-                    let classStatStr = `應到: ${group.stats.total} | 實到: ${group.stats.byStatus['實到'] || 0}`;
+                const groupName = key;
+                const group = grouped[key];
 
-                    // Generate class detail string
-                    let classDetailHtml = "";
-                    Object.entries(group.stats.byStatusNames).forEach(([status, names]) => {
-                        if (status !== '實到' && names.length > 0) {
-                            classDetailHtml += `<div class="text-end" style="font-size: 0.85rem;">${status}: ${names.length} (${names.join(' ')})</div>`;
-                        }
-                    });
+                let classStatStr = `應到: ${group.stats.total} | 實到: ${group.stats.byStatus['實到'] || 0}`;
 
-                    const rows = group.students.map(student => {
-                        // Determine Permissions
-                        let canEdit = false;
-                        let canDelete = false;
+                // Generate class detail string
+                let classDetailHtml = "";
+                Object.entries(group.stats.byStatusNames).forEach(([status, names]) => {
+                    if (status !== '實到' && names.length > 0) {
+                        classDetailHtml += `<div class="text-end" style="font-size: 0.85rem;">${status}: ${names.length} (${names.join(' ')})</div>`;
+                    }
+                });
 
-                        if (currentUser) {
-                            if (currentUser.role === 'super_admin') {
+                const rows = group.students.map(student => {
+                    // Determine Permissions
+                    let canEdit = false;
+                    let canDelete = false;
+
+                    if (currentUser) {
+                        if (currentUser.role === 'super_admin') {
+                            canEdit = true;
+                            canDelete = true;
+                        } else if (currentUser.role === 'general_admin') {
+                            canEdit = true;
+                            canDelete = true;
+                        } else if (currentUser.role === 'class_admin') {
+                            if (currentUser.class === student.class) {
                                 canEdit = true;
-                                canDelete = true;
-                            } else if (currentUser.role === 'general_admin') {
+                                canDelete = false; // Restricted
+                            }
+                        } else if (currentUser.role === 'district_admin') {
+                            if (currentUser.managedClasses && currentUser.managedClasses.includes(student.class)) {
                                 canEdit = true;
-                                canDelete = true;
-                            } else if (currentUser.role === 'class_admin') {
-                                if (currentUser.class === student.class) {
-                                    canEdit = true;
-                                    canDelete = false; // Restricted
-                                }
-                            } else if (currentUser.role === 'group_admin') {
-                                // Dining sessions: edit group members. Other times: only self
-                                const isDining = (currentSession === '中午上餐廳' || currentSession === '晚上上餐廳');
-                                if (isDining && student.group === currentUser.group) {
-                                    canEdit = true;
-                                } else if (currentUser.id === student.id) {
-                                    canEdit = true;
-                                }
-                            } else { // student
-                                if (currentUser.id === student.id) canEdit = true;
                             }
-                        }
-
-                        // Check for Pending Requests
-                        const sessionKey = `${currentDay}_${currentSession}`;
-
-                        const pendingReq = pendingRequests.find(r =>
-                            r.studentId === student.id &&
-                            r.targetSession === sessionKey &&
-                            r.status === 'pending'
-                        );
-
-                        let statusDisplay = getStatusBadge(student._currentStatus);
-                        let rowStyle = "";
-
-                        if (pendingReq) {
-                            statusDisplay = `<span class="badge bg-warning text-dark">審核中: ${pendingReq.newStatus}</span>`;
-                            canEdit = false; // Lock editing while pending
-                            rowStyle = "background-color: #fff3cd;"; // Light yellow row
-                        }
-
-                        // Onclick name: if not logged in, trigger login. If logged in but no edit, do nothing or show info.
-                        const nameAction = !currentUser ? `onclick="initLogin('${student.id}', '${student.name}')" style="cursor: pointer; text-decoration: underline;"` : '';
-
-                        // Check if getStatusList returns array
-                        const statusList = getStatusList(student.squadron);
-                        if (!Array.isArray(statusList)) {
-                            console.error("Status List is not array for", student.squadron, statusList);
-                            return ""; // Fail gracefully
-                        }
-
-                        return `
-                        <tr style="${rowStyle}">
-                            <td>
-                                <span class="fw-bold ${getNameColorClass(student._currentStatus)}" ${nameAction}>${student.name}</span>
-                                <br><span class="badge bg-light text-secondary border">${student.squadron ? student.squadron + ' / ' : ''}${student.class} / ${student.group || '-'}</span>
-                            </td>
-                            <td>${statusDisplay}</td>
-                            <td class="text-center">
-                                ${(pendingReq && currentUser && (currentUser.id === pendingReq.requesterId || currentUser.role === 'super_admin')) ?
-                                `<button class="btn btn-sm btn-outline-danger w-100 fw-bold" onclick="cancelRequest('${pendingReq.id}')">取消申請</button>` :
-                                (canEdit ? `<select class="form-select form-select-sm fw-bold ${getStatusColorClass(student._currentStatus)}" 
-                                        onchange="updateStatus('${student.id}', this.value)" 
-                                        style="min-width: 110px;">
-                                    ${statusList.map(s => {
-                                    const sClean = stripStatusHtml(s);
-                                    return `<option value="${s}" ${student._currentStatus === sClean ? 'selected' : ''}>${sClean}</option>`;
-                                }).join('')}
-                                    </select>` : '')
+                        } else if (currentUser.role === 'group_admin') {
+                            // Dining sessions: edit group members. Other times: only self
+                            const isDining = (currentSession === '中午上餐廳' || currentSession === '晚上上餐廳');
+                            if (isDining && student.group === currentUser.group) {
+                                canEdit = true;
+                            } else if (currentUser.id === student.id) {
+                                canEdit = true;
                             }
-                            </td>
-                            <td class="text-end">
-                            </td>
-                        </tr>
-                    `}).join('');
+                        } else { // student
+                            if (currentUser.id === student.id) canEdit = true;
+                        }
+                    }
 
-                    const card = `
-                        <div class="col-xl-6 col-12">
-                            <div class="card shadow-sm border-0 h-100">
-                                <div class="class-header d-flex justify-content-between align-items-start">
-                                    <div class="d-flex align-items-center mt-1">
-                                        <span class="fs-5 me-2"><i class="bi bi-house-door-fill me-2"></i>${groupName}</span>
-                                        <div class="dropdown">
-                                            <button class="btn btn-sm btn-link text-white p-0" type="button" data-bs-toggle="dropdown"><i class="bi bi-three-dots-vertical"></i></button>
-                                            <ul class="dropdown-menu">
-                                                <li><button class="dropdown-item" onclick="openExportModal('group', '${groupName}', '${groupName}')"><i class="bi bi-clipboard me-2"></i>匯出/複製本班點名單</button></li>
-                                                <li><hr class="dropdown-divider"></li>
-                                                <li><button class="dropdown-item text-danger" onclick="resetStatus('current', '${groupName}')"><i class="bi bi-arrow-counterclockwise me-2"></i>重置 (本次)</button></li>
-                                                <li><button class="dropdown-item text-danger" onclick="resetStatus('day', '${groupName}')"><i class="bi bi-calendar-x me-2"></i>重置 (整天)</button></li>
-                                            </ul>
-                                        </div>
-                                    </div>
-                                    <div class="d-flex flex-column align-items-end">
-                                        <span class="badge bg-light text-dark opacity-75 fw-normal fs-6 mb-1">${classStatStr}</span>
-                                        <div class="text-white opacity-90">${classDetailHtml}</div>
+                    // Check for Pending Requests
+                    const sessionKey = `${currentDay}_${currentSession}`;
+
+                    const pendingReq = pendingRequests.find(r =>
+                        r.studentId === student.id &&
+                        r.targetSession === sessionKey &&
+                        r.status === 'pending'
+                    );
+
+                    let statusDisplay = getStatusBadge(student._currentStatus);
+                    let rowStyle = "";
+
+                    if (pendingReq) {
+                        statusDisplay = `<span class="badge bg-warning text-dark">審核中: ${pendingReq.newStatus}</span>`;
+                        canEdit = false; // Lock editing while pending
+                        rowStyle = "background-color: #fff3cd;"; // Light yellow row
+                    }
+
+                    // Onclick name: if not logged in, trigger login. If logged in but no edit, do nothing or show info.
+                    const nameAction = !currentUser ? `onclick="initLogin('${student.id}', '${student.name}')" style="cursor: pointer; text-decoration: underline;"` : '';
+
+                    return `
+                    <tr style="${rowStyle}">
+                        <td>
+                            <span class="fw-bold ${getNameColorClass(student._currentStatus)}" ${nameAction}>${student.name}</span>
+                            <br><span class="badge bg-light text-secondary border">${student.class} / ${student.group || '-'}</span>
+                        </td>
+                        <td>${statusDisplay}</td>
+                        <td>
+                            <select class="form-select form-select-sm fw-bold ${getStatusColorClass(student._currentStatus)}" 
+                                    onchange="updateStatus('${student.id}', this.value)" 
+                                    style="min-width: 110px;"
+                                    ${canEdit ? '' : 'disabled'}>
+                                ${currentStatuses.map(s => {
+                        const sClean = stripStatusHtml(s);
+                        return `<option value="${s}" ${student._currentStatus === sClean ? 'selected' : ''}>${sClean}</option>`;
+                    }).join('')}
+                            </select>
+                        </td>
+                         <td class="text-end">
+                            ${(pendingReq && currentUser && (currentUser.id === pendingReq.requesterId || currentUser.role === 'super_admin')) ?
+                            `<button class="btn btn-sm btn-outline-danger" onclick="cancelRequest('${pendingReq.id}')" title="取消申請"><i class="bi bi-x-lg"></i></button>` :
+                            (canDelete ? `<button class="btn btn-sm btn-light text-danger" onclick="removeStudent('${student.id}')"><i class="bi bi-trash"></i></button>` : '')
+                        }
+                        </td>
+                    </tr>
+                `}).join('');
+
+                const card = `
+                    <div class="col-xl-6 col-12">
+                        <div class="card shadow-sm border-0 h-100">
+                            <div class="class-header d-flex justify-content-between align-items-start">
+                                <div class="d-flex align-items-center mt-1">
+                                    <span class="fs-5 me-2"><i class="bi bi-house-door-fill me-2"></i>${groupName}</span>
+                                    <div class="dropdown">
+                                        <button class="btn btn-sm btn-link text-white p-0" type="button" data-bs-toggle="dropdown"><i class="bi bi-three-dots-vertical"></i></button>
+                                        <ul class="dropdown-menu">
+                                            <li><button class="dropdown-item" onclick="openExportModal('group', '${groupName}', '${groupName}')"><i class="bi bi-clipboard me-2"></i>匯出/複製本班點名單</button></li>
+                                            <li><hr class="dropdown-divider"></li>
+                                            <li><button class="dropdown-item text-danger" onclick="resetStatus('current', '${groupName}')"><i class="bi bi-arrow-counterclockwise me-2"></i>重置 (本次)</button></li>
+                                            <li><button class="dropdown-item text-danger" onclick="resetStatus('day', '${groupName}')"><i class="bi bi-calendar-x me-2"></i>重置 (整天)</button></li>
+                                        </ul>
                                     </div>
                                 </div>
-                                <div class="card-body p-0"><div class="table-responsive"><table class="table table-hover align-middle mb-0"><thead class="table-light"><tr><th style="width: 25%">姓名</th><th style="width: 15%">狀態</th><th>操作</th><th style="width: 10%"></th></tr></thead><tbody>${rows}</tbody></table></div></div>
+                                <div class="d-flex flex-column align-items-end">
+                                    <span class="badge bg-light text-dark opacity-75 fw-normal fs-6 mb-1">${classStatStr}</span>
+                                    <div class="text-white opacity-90">${classDetailHtml}</div>
+                                </div>
                             </div>
+                            <div class="card-body p-0"><div class="table-responsive"><table class="table table-hover align-middle mb-0"><thead class="table-light"><tr><th style="width: 25%">姓名</th><th style="width: 15%">狀態</th><th>操作</th><th style="width: 10%"></th></tr></thead><tbody>${rows}</tbody></table></div></div>
                         </div>
-                    `;
-                    container.innerHTML += card;
-                } catch (e) {
-                    console.error("Error rendering group:", key, e);
-                }
+                    </div>
+                `;
+                container.innerHTML += card;
             });
 
             // Re-apply search filter if exists - REMOVED because filterStudents() conflicts with renderAll's internal filtering logic
@@ -1353,12 +1152,9 @@
             const classInput = document.getElementById('inputClass').value.trim();
             const groupInput = document.getElementById('inputGroup').value.trim();
             const nameInput = document.getElementById('inputName').value.trim();
-            const squadronInput = document.getElementById('inputSquadron').value; // Get Squadron
-
             if (!classInput || !nameInput) return alert("請輸入班級和姓名");
             try {
                 await addDoc(studentsRef, {
-                    squadron: squadronInput || currentSquadron, // Save Squadron
                     class: classInput,
                     group: groupInput || "無",
                     name: nameInput,
@@ -1368,7 +1164,6 @@
                     timestamp: new Date()
                 });
                 document.getElementById('inputName').value = '';
-                alert("新增成功");
             } catch (e) { console.error(e); alert("新增失敗"); }
         };
         window.batchAddStudents = async () => {
@@ -1381,33 +1176,10 @@
                 line = line.trim();
                 const parts = line.split(/\s+/);
                 if (parts.length < 3) continue;
-
-                let sq = currentSquadron;
-                let cl = parts[0];
-                let gr = parts[1];
-                let nm = parts.slice(2).join(' ');
-
-                // Check if first part looks like a known squadron (heuristic or strict?)
-                // Or just check length? If length >= 4, we *could* assume first is squadron.
-                // But names might have spaces. 
-                // Better heuristic: if parts[0] includes '大' or '中' (common in One/Two Battalion names) OR is in a known list?
-                // Let's use simple length heuristic combined with user instruction. 
-                // User instruction says: Squadron Class Group Name. 
-                // If 4+ parts, assume part[0] is squadron IF it matches a known pattern or just straightforwardly take it.
-                // Let's check against known squadron names for safety.
-                const allSquadrons = [...battalionStructure["一大隊"], ...battalionStructure["二大隊"]];
-                if (parts.length >= 4 && allSquadrons.includes(parts[0])) {
-                    sq = parts[0];
-                    cl = parts[1];
-                    gr = parts[2];
-                    nm = parts.slice(3).join(' ');
-                }
-
                 promises.push(addDoc(studentsRef, {
-                    squadron: sq,
-                    class: cl,
-                    group: gr,
-                    name: nm,
+                    class: parts[0],
+                    group: parts[1],
+                    name: parts.slice(2).join(' '),
                     status: {},
                     password: '0000',
                     role: 'student',
@@ -1428,43 +1200,27 @@
             if (!student) return;
 
             let canDirectlyUpdate = false;
-            const role = currentUser.role;
 
-            // 1. Super Admin & General Admin (Duty Officer)
-            if (role === 'super_admin' || role === 'general_admin') {
+            if (currentUser.role === 'super_admin') {
                 canDirectlyUpdate = true;
-            }
-            // 2. Battalion Admin (大隊幹部)
-            else if (role === 'battalion_admin') {
-                const targetBattalion = getBattalionFromSquadron(student.squadron);
-                if (targetBattalion && targetBattalion === currentUser.managedBattalion) {
-                    canDirectlyUpdate = true;
-                }
-            }
-            // 3. Squadron Admin & Duty Class (中隊幹部 / 值星班)
-            else if (role === 'squadron_admin' || role === 'duty_class') {
-                if (student.squadron === currentUser.squadron) {
-                    canDirectlyUpdate = true;
-                }
-            }
-            // 4. District Admin (區隊長)
-            else if (role === 'district_admin') {
+            } else if (currentUser.role === 'general_admin') {
+                canDirectlyUpdate = true;
+            } else if (currentUser.role === 'class_admin') {
+                if (currentUser.class === student.class) canDirectlyUpdate = true;
+            } else if (currentUser.role === 'district_admin') {
                 if (currentUser.managedClasses && currentUser.managedClasses.includes(student.class)) {
                     canDirectlyUpdate = true;
                 }
-            }
-            // 5. Class Admin (實習幹部)
-            else if (role === 'class_admin') {
-                if (student.class === currentUser.class) {
-                    canDirectlyUpdate = true;
-                }
-            }
-            // 6. Group Admin (組別負責人) - Dining Only
-            else if (role === 'group_admin') {
+            } else if (currentUser.role === 'group_admin') {
+                // Dining sessions: edit group members. Other times: only self (but self needs request?)
+                // Plan: "Other times only can request for themselves". So Group Admin for others in non-dining = No.
+                // Group Admin for self in non-dining = Request (based on "Students submit requests").
+
                 const isDining = (currentSession === '中午上餐廳' || currentSession === '晚上上餐廳');
                 if (isDining && student.group === currentUser.group) {
                     canDirectlyUpdate = true;
                 }
+                // Note: Self-update for students/admins outside their scope defaults to Request.
             }
 
             const statusKey = getStatusKey(currentSession);
@@ -1485,7 +1241,6 @@
                         studentName: student.name,
                         studentClass: student.class,
                         studentGroup: student.group || '',
-                        studentSquadron: student.squadron || '', // Critical for filtering
                         targetSession: statusKey, // e.g. 星期一_早點名
                         sessionName: currentSession,
                         dayName: currentDay,
@@ -1661,71 +1416,17 @@
             `).join('');
         };
 
-        // Status Settings Logic
-        const statusConfigRef = doc(db, "settings", "statusConfig");
-
-        // Listen to Status Config
-        onSnapshot(statusConfigRef, (docSnap) => {
-            if (docSnap.exists()) {
-                statusConfigCache = docSnap.data();
-                // Ensure global exists
-                if (!statusConfigCache["global"]) statusConfigCache["global"] = [...DEFAULT_STATUSES];
-            } else {
-                // Initialize if missing
-                setDoc(statusConfigRef, { global: DEFAULT_STATUSES });
-                statusConfigCache = { global: [...DEFAULT_STATUSES] };
-            }
-            // Re-render UI if settings open or just to be safe
-            if (document.getElementById('settingsModal').classList.contains('show')) {
-                renderStatusSettings();
-            }
-            renderAll(); // Re-render main table with new statuses
-        });
-
-        window.openSettingsModal = () => {
-            if (!currentUser) return;
-            // Check permissions
-            const scopes = getEditableStatusScopes();
-            if (scopes.length === 0) {
-                alert("您沒有權限設定差勤狀態。");
-                return;
-            }
-
-            const select = document.getElementById('settingTargetScope');
-            select.innerHTML = scopes.map(s => `<option value="${s.val}">${s.label}</option>`).join('');
-
-            // Default selection logic: existing logic or first
-            renderStatusSettings();
-            bootstrap.Modal.getOrCreateInstance(document.getElementById('settingsModal')).show();
-        };
-
         window.renderStatusSettings = () => {
-            const scope = document.getElementById('settingTargetScope').value;
-            const container = document.getElementById('statusListContainer');
-
-            // Get current list for this scope. If not set, it might be empty or fallback.
-            // For editing, if a squadron has NO specific config, we should probably show GLOBAL as "Inherited" 
-            // OR show empty and let them start fresh?
-            // Better: If undefined, show "Use Global (Default)" and allow "Override".
-            // To simplify: If undefined, we initialize it with copy of Global when they try to add?
-            // Or just treat undefined as empty array?
-            // Let's treat it as: If key missing in cache, it uses global for *display*, but for *editing*, we start with global copy.
-
-            let list = statusConfigCache[scope];
-            if (!list && scope !== 'global') {
-                // If specific scope has no config, showing Global's effectively
-                list = statusConfigCache['global'] || DEFAULT_STATUSES;
-            } else if (!list) {
-                list = DEFAULT_STATUSES;
-            }
-
-            container.innerHTML = list.map((status, index) => `
-                <div class="badge bg-light text-dark border p-2 me-2 mb-2 d-flex align-items-center">
-                    ${status} 
-                    <button class="btn-close ms-2" style="font-size: 0.8em;" onclick="removeStatusType('${scope}', '${status}')"></button>
+            const container = document.getElementById('currentStatusList');
+            container.innerHTML = currentStatuses.map(s => {
+                const sClean = stripStatusHtml(s);
+                return `
+                <div class="custom-status-tag border rounded px-2 py-1 bg-light">
+                    ${sClean}
+                    <i class="bi bi-x ms-2 text-danger cursor-pointer" onclick="removeStatusType('${s}')"></i>
                 </div>
-                `
-            ).join('');
+                `;
+            }).join('');
         };
 
         // Export helper functions
@@ -1770,7 +1471,7 @@
                     notificationBtn.classList.add('d-none');
                 }
 
-                if (currentUser.role === 'super_admin') {
+                if (currentUser.role === 'super_admin' || currentUser.role === 'general_admin') {
                     adminManageLink.classList.remove('d-none');
                 } else {
                     adminManageLink.classList.add('d-none');
@@ -1778,7 +1479,7 @@
 
                 // Control Add Student Button visibility
                 const addStudentBtn = document.getElementById('addStudentBtn');
-                if (currentUser.role === 'super_admin') {
+                if (currentUser.role === 'super_admin' || currentUser.role === 'general_admin') {
                     addStudentBtn.classList.remove('d-none');
                 } else {
                     addStudentBtn.classList.add('d-none');
@@ -1805,51 +1506,7 @@
 
         window.showAdminDashboard = () => {
             renderAdminUserList();
-            const btn = document.getElementById('deleteAllBtn');
-            if (btn) {
-                if (currentUser && currentUser.role === 'super_admin') {
-                    btn.classList.remove('d-none');
-                } else {
-                    btn.classList.add('d-none');
-                }
-            }
             bootstrap.Modal.getOrCreateInstance(document.getElementById('adminDashboardModal')).show();
-        };
-
-        window.deleteAllUsers = async () => {
-            if (!currentUser || currentUser.role !== 'super_admin') return;
-
-            if (!confirm("⚠️ 危險操作警告 (1/3)\n\n您確定要「刪除所有人員」嗎？\n\n此操作將清空系統中除了您以外的所有使用者資料！\n資料一旦刪除將無法復原！")) return;
-            if (!confirm("⚠️ 再次確認 (2/3)\n\n真的要刪除嗎？\n\n這會造成嚴重的資料遺失，請確認您知道自己在做什麼！")) return;
-            if (!confirm("⛔ 最後確認 (3/3)\n\n這是最後一次機會。\n\n點擊「確定」將立即開始刪除。\n點擊「取消」可以中止操作。")) return;
-
-            const candidates = studentsData.filter(s => s.id !== currentUser.id);
-            if (candidates.length === 0) {
-                alert("沒有其他人員可供刪除。");
-                return;
-            }
-
-            const btn = document.getElementById('deleteAllBtn');
-            const originalText = btn.innerHTML;
-            btn.disabled = true;
-            btn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> 刪除中...';
-
-            try {
-                let count = 0;
-                for (const student of candidates) {
-                    await deleteDoc(doc(db, "students", student.id));
-                    count++;
-                }
-
-                alert(`已成功刪除 ${count} 位人員。`);
-                renderAdminUserList();
-            } catch (e) {
-                console.error(e);
-                alert("刪除過程中發生錯誤：" + e.message);
-            } finally {
-                btn.disabled = false;
-                btn.innerHTML = originalText;
-            }
         };
 
         window.showAddStudentModal = () => {
@@ -1859,29 +1516,31 @@
         window.renderAdminUserList = () => {
             const tbody = document.getElementById('adminUserListBody');
             const term = document.getElementById('adminUserSearch').value.toLowerCase();
-
-            // Dynamic Role Options
-            const roleOptions = Object.keys(ROLE_DEFS).map(key => ({ val: key, label: ROLE_DEFS[key].label }));
+            const filterClass = document.getElementById('adminClassFilter') ? document.getElementById('adminClassFilter').value : 'all';
 
             const filtered = studentsData.filter(s => {
-                const roleLabel = ROLE_DEFS[s.role]?.label || '';
                 const matchesSearch = s.name.includes(term) ||
                     s.class.includes(term) ||
                     (s.group && s.group.includes(term)) ||
-                    (s.role || 'student').includes(term) ||
-                    roleLabel.includes(term) ||
-                    (s.squadron || '').includes(term);
-                return matchesSearch;
-            }).sort((a, b) => (a.squadron || "").localeCompare(b.squadron || "") || a.class.localeCompare(b.class));
+                    (s.role || 'student').includes(term);
+
+                const matchesFilter = filterClass === 'all' || s.class === filterClass || s.group === filterClass;
+
+                return matchesSearch && matchesFilter;
+            });
+
+            const roleOptions = [
+                { val: 'student', label: '學生' },
+                { val: 'group_admin', label: '組別班代' },
+                { val: 'class_admin', label: '實習幹部' },
+                { val: 'general_admin', label: '管理員' }
+            ];
 
             tbody.innerHTML = filtered.map(s => {
                 const currentRole = s.role || 'student';
                 return `
                     <tr>
-                        <td>
-                            <span class="badge bg-info text-dark me-1" style="font-size: 0.8em;">${s.squadron || '未分組'}</span>
-                            ${s.name}
-                        </td>
+                        <td>${s.name}</td>
                         <td>
                              <div class="d-flex align-items-center">
                                 <select class="form-select form-select-sm me-1" onchange="updateUserClass('${s.id}', this.value)" style="width: auto; min-width: 80px;">
@@ -1894,26 +1553,14 @@
                             <select class="form-select form-select-sm" onchange="updateUserRole('${s.id}', this.value)">
                                 ${roleOptions.map(opt => `<option value="${opt.val}" ${currentRole === opt.val ? 'selected' : ''}>${opt.label}</option>`).join('')}
                             </select>
-                            ${renderRoleDetails(s)}
                         </td>
                         <td>
                             <button class="btn btn-sm btn-outline-secondary" onclick="resetUserPassword('${s.id}', '${s.name}')">重置密碼</button>
-                            ${(currentUser.role === 'super_admin') ? `<button class="btn btn-sm btn-outline-danger ms-1" onclick="removeStudent('${s.id}')">刪除人員</button>` : ''}
                         </td>
                     </tr>
                 `;
             }).join('');
         };
-
-        function renderRoleDetails(s) {
-            if (s.role === 'district_admin' && s.managedClasses) {
-                return `<div class="small text-muted mt-1">管轄: ${s.managedClasses.join(', ')} <i class="bi bi-pencil-square cursor-pointer text-primary" onclick="openRoleConfig('${s.id}', 'district_admin')"></i></div>`;
-            }
-            if (s.role === 'battalion_admin' && s.managedBattalion) {
-                return `<div class="small text-muted mt-1">管轄: ${s.managedBattalion} <i class="bi bi-pencil-square cursor-pointer text-primary" onclick="openRoleConfig('${s.id}', 'battalion_admin')"></i></div>`;
-            }
-            return '';
-        }
 
         window.updateUserClass = async (uid, newClass) => {
             if (currentUser.role !== 'super_admin' && currentUser.role !== 'general_admin') {
@@ -1923,12 +1570,15 @@
             }
             try {
                 await updateDoc(doc(db, "students", uid), { class: newClass });
+                // Optimistic update
                 const student = studentsData.find(s => s.id === uid);
                 if (student) student.class = newClass;
+                // Render list again isn't strictly necessary if optimistic update works, 
+                // but good for consistency. However, onchange already changed the UI.
             } catch (e) {
                 console.error(e);
                 alert("更新班級失敗: " + e.message);
-                renderAdminUserList();
+                renderAdminUserList(); // Revert on fail
             }
         };
 
@@ -1936,90 +1586,15 @@
         window.updateUserRole = async (uid, newRole) => {
             if (currentUser.role !== 'super_admin') {
                 alert("您沒有權限執行此操作。");
-                renderAdminUserList(); // Revert
                 return;
             }
-
-            // Check if config is needed
-            if (['battalion_admin', 'district_admin'].includes(newRole)) {
-                openRoleConfig(uid, newRole);
-                return; // Wait for modal save
-            }
-
-            // Direct update for simple roles
             try {
                 await updateDoc(doc(db, "students", uid), { role: newRole });
-                const s = studentsData.find(s => s.id === uid);
-                if (s) s.role = newRole;
-                renderAdminUserList();
+                // alert("權限已更新");
+                studentsData.find(s => s.id === uid).role = newRole; // Optimistic update
             } catch (e) {
                 console.error(e);
                 alert("更新失敗: " + e.message);
-                renderAdminUserList();
-            }
-        };
-
-        window.openRoleConfig = (uid, role) => {
-            const s = studentsData.find(s => s.id === uid);
-            if (!s) return;
-
-            document.getElementById('configTargetId').value = uid;
-            document.getElementById('configTargetRole').value = role;
-            document.getElementById('configTargetName').innerText = `設定 ${s.name} 的 ${ROLE_DEFS[role].label} 權限`;
-
-            // Reset UI
-            document.querySelectorAll('.role-config-section').forEach(el => el.classList.add('d-none'));
-
-            if (role === 'battalion_admin') {
-                document.getElementById('battalionConfig').classList.remove('d-none');
-                document.getElementById('configBattalion').value = s.managedBattalion || "一大隊";
-            } else if (role === 'district_admin') {
-                document.getElementById('districtConfig').classList.remove('d-none');
-                const list = document.getElementById('configClassList');
-                list.innerHTML = classOrder.map(c => `
-                    <div class="form-check">
-                        <input class="form-check-input" type="checkbox" value="${c}" id="chk_cls_${c}" ${s.managedClasses && s.managedClasses.includes(c) ? 'checked' : ''}>
-                        <label class="form-check-label" for="chk_cls_${c}">${c}</label>
-                    </div>
-                `).join('');
-            } else if (['squadron_admin', 'duty_class'].includes(role)) {
-                // Nothing to set, but let user verify
-                // Actually updateUserRole handles this immediately if not complex. 
-                // But if we want to show info, we can.
-                // Current logic calls this only for complex roles. 
-                // But wait, user might want to assign Duty Class but confirm squadron?
-                // Let's rely on data model: Duty Class uses `squadron` field. 
-            }
-
-            bootstrap.Modal.getOrCreateInstance(document.getElementById('roleConfigModal')).show();
-        };
-
-        window.saveRoleConfig = async () => {
-            const uid = document.getElementById('configTargetId').value;
-            const role = document.getElementById('configTargetRole').value;
-            const updates = { role: role };
-
-            if (role === 'battalion_admin') {
-                updates.managedBattalion = document.getElementById('configBattalion').value;
-            } else if (role === 'district_admin') {
-                const checked = document.querySelectorAll('#configClassList input:checked');
-                updates.managedClasses = Array.from(checked).map(cb => cb.value);
-            }
-
-            try {
-                await updateDoc(doc(db, "students", uid), updates);
-                const s = studentsData.find(s => s.id === uid);
-                if (s) {
-                    s.role = role;
-                    if (updates.managedBattalion) s.managedBattalion = updates.managedBattalion;
-                    if (updates.managedClasses) s.managedClasses = updates.managedClasses;
-                }
-                bootstrap.Modal.getOrCreateInstance(document.getElementById('roleConfigModal')).hide();
-                renderAdminUserList();
-                alert("權限設定已已更新");
-            } catch (e) {
-                console.error(e);
-                alert("儲存失敗: " + e.message);
             }
         };
 
@@ -2039,41 +1614,24 @@
             return pendingRequests.filter(req => {
                 if (req.status !== 'pending') return false;
 
-                const role = currentUser.role;
-
-                // 1. Super / General: All
-                if (role === 'super_admin' || role === 'general_admin') return true;
-
-                // 2. Battalion Admin
-                if (role === 'battalion_admin') {
-                    // Need to check target's squadron -> battalion
-                    return getBattalionFromSquadron(req.studentSquadron) === currentUser.managedBattalion;
-                }
-
-                // 3. Squadron Admin / Duty Class
-                if (role === 'squadron_admin' || role === 'duty_class') {
-                    return req.studentSquadron === currentUser.squadron;
-                }
-
-                // 4. District Admin
-                if (role === 'district_admin') {
-                    return currentUser.managedClasses && currentUser.managedClasses.includes(req.studentClass);
-                }
-
-                // 5. Class Admin
-                if (role === 'class_admin') {
+                if (currentUser.role === 'super_admin' || currentUser.role === 'general_admin') return true;
+                if (currentUser.role === 'class_admin') {
                     return req.studentClass === currentUser.class;
                 }
-
-                // 6. Group Admin (Dining Only)
-                if (role === 'group_admin') {
+                if (currentUser.role === 'group_admin') {
+                    // Only dining sessions for Group Admin? Or all? 
+                    // Plan: "Group Admin approval rights restricted to dining sessions."
+                    // Let's implement that strict check.
+                    // Wait, req contains `targetSession` (key) and `sessionName`.
+                    // Check if sessionName contains "餐廳" ?
                     const isDining = (req.sessionName === '中午上餐廳' || req.sessionName === '晚上上餐廳');
                     if (isDining && req.studentGroup === currentUser.group) return true;
+                    // Else: Cannot approve. 
                 }
-
                 return false;
             });
         }
+
         function updateNotificationBadge() {
             const badge = document.getElementById('notificationBadge');
             const relevant = getRelevantRequests();
@@ -2494,9 +2052,22 @@
             }
         };
 
+        function renderStatusSettings() {
+            const canManage = currentUser && ['super_admin', 'general_admin', 'class_admin', 'group_admin'].includes(currentUser.role);
+            const isSuperOrGeneral = currentUser && ['super_admin', 'general_admin'].includes(currentUser.role);
 
+            const addContainer = document.getElementById('addStatusContainer');
+            if (addContainer) {
+                if (canManage) addContainer.classList.remove('d-none');
+                else addContainer.classList.add('d-none');
+            }
 
+            let html = currentStatuses.map(s => `
+            <div class="custom-status-tag border rounded px-2 py-1 bg-light">${s} ${(s !== '實到' && canManage) ? `<span role="button" class="text-danger ms-2 fw-bold" onclick="removeStatusType('${s}')">&times;</span>` : ''}</div>
+            `).join('');
 
+            document.getElementById('statusListContainer').innerHTML = html;
+        }
 
         // Enable Drag to Scroll & Wheel to Scroll
         function enableDragScroll(id) {
