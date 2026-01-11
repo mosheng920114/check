@@ -431,9 +431,9 @@
                             style="table-layout: fixed; font-size: 0.95rem;">
                             <thead class="table-light">
                                 <tr>
-                                    <th style="width: 15%;">姓名</th>
-                                    <th style="width: 40%;">班級 / 組別</th>
-                                    <th style="width: 30%;">權限</th>
+                                    <th style="width: 20%;">姓名</th>
+                                    <th style="width: 25%;">班級 / 組別</th>
+                                    <th style="width: 40%;">權限</th>
                                     <th style="width: 15%;">操作</th>
                                 </tr>
                             </thead>
@@ -526,21 +526,18 @@
                         <button class="btn btn-outline-secondary btn-sm" onclick="openHistoryModal(true)"><i
                                 class="bi bi-arrow-clockwise me-1"></i>重新整理</button>
                     </div>
-                    <div class="table-responsive">
-                        <table class="table table-hover align-middle table-sm">
-                            <thead class="table-light">
-                                <tr>
-                                    <th style="width: 15%">時間</th>
-                                    <th style="width: 15%">操作者</th>
-                                    <th style="width: 15%">動作類型</th>
-                                    <th style="width: 15%">對象</th>
-                                    <th>詳細內容</th>
-                                </tr>
-                            </thead>
-                            <tbody id="historyLogBody">
-                                <!-- JS Generated -->
-                            </tbody>
-                        </table>
+                    <div class="border rounded">
+                        <!-- Desktop Header -->
+                        <div class="d-none d-md-flex bg-light fw-bold p-2 border-bottom small text-muted">
+                            <div style="width: 20%;">時間 / 操作者</div>
+                            <div style="width: 20%;">類型 / 對象</div>
+                            <div style="flex: 1;">詳細內容</div>
+                        </div>
+                        <!-- Log List -->
+                        <div id="historyLogList" class="list-group list-group-flush"
+                            style="max-height: 70vh; overflow-y: auto;">
+                            <!-- JS Generated -->
+                        </div>
                     </div>
                 </div>
             </div>
@@ -643,8 +640,8 @@
         };
 
         async function fetchLogs() {
-            const body = document.getElementById('historyLogBody');
-            body.innerHTML = '<tr><td colspan="5" class="text-center"><div class="spinner-border spinner-border-sm text-primary"></div> 載入中...</td></tr>';
+            const list = document.getElementById('historyLogList');
+            list.innerHTML = '<div class="p-4 text-center"><div class="spinner-border spinner-border-sm text-primary"></div> 載入中...</div>';
 
             try {
                 // Determine 7 days ago strictly
@@ -678,10 +675,10 @@
                         });
                         renderLogs();
                     } catch (e2) {
-                        body.innerHTML = `<tr><td colspan="5" class="text-danger text-center">載入失敗: ${e2.message}</td></tr>`;
+                        list.innerHTML = `<div class="p-4 text-danger text-center">載入失敗: ${e2.message}</div>`;
                     }
                 } else {
-                    body.innerHTML = `<tr><td colspan="5" class="text-danger text-center">載入失敗: ${e.message}</td></tr>`;
+                    list.innerHTML = `<div class="p-4 text-danger text-center">載入失敗: ${e.message}</div>`;
                 }
             }
         }
@@ -695,7 +692,7 @@
 
         window.renderLogs = () => {
             const term = document.getElementById('historySearch').value.toLowerCase();
-            const body = document.getElementById('historyLogBody');
+            const list = document.getElementById('historyLogList');
 
             const filtered = historyData.filter(log => {
                 const actorName = (log.actor?.name || '').toLowerCase();
@@ -706,19 +703,47 @@
             });
 
             if (filtered.length === 0) {
-                body.innerHTML = '<tr><td colspan="5" class="text-center text-muted">無紀錄</td></tr>';
+                list.innerHTML = '<div class="p-4 text-center text-muted">無紀錄</div>';
                 return;
             }
 
-            body.innerHTML = filtered.map(log => `
-                <tr>
-                    <td class="small text-muted">${log.timestamp?.toDate ? log.timestamp.toDate().toLocaleString() : new Date(log.timestamp).toLocaleString()}</td>
-                    <td><span class="badge bg-light text-dark border">${log.actor?.name || '未知'}</span> <small class="text-muted">(${formatRole(log.actor?.role)})</small></td>
-                    <td>${getActionTypeBadge(log.actionType)}</td>
-                    <td>${log.target?.name || '-'}</td>
-                    <td class="text-wrap small" style="max-width: 300px;">${log.details || ''}</td>
-                </tr>
-            `).join('');
+            list.innerHTML = filtered.map(log => {
+                const timeStr = log.timestamp?.toDate ? log.timestamp.toDate().toLocaleString() : new Date(log.timestamp).toLocaleString();
+                return `
+                <div class="list-group-item list-group-item-action p-2">
+                    <div class="d-flex flex-column flex-md-row gap-2 align-items-md-center">
+                        
+                        <!-- Col 1: Time & Actor -->
+                        <div class="" style="flex-basis: 20%; min-width: 180px;">
+                            <div class="d-flex flex-md-column justify-content-between align-items-center align-items-md-start">
+                                <small class="text-muted" style="font-size: 0.8rem;">${timeStr}</small>
+                                <div class="d-md-none text-muted mx-2">|</div> <!-- Mobile Separator -->
+                                <div>
+                                    <span class="fw-bold text-dark">${log.actor?.name || '未知'}</span>
+                                    <small class="text-muted d-none d-md-inline">(${formatRole(log.actor?.role)})</small>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Col 2: Type & Target -->
+                        <div class="" style="flex-basis: 20%; min-width: 150px;">
+                            <div class="d-flex flex-md-column justify-content-between align-items-center align-items-md-start">
+                                <div>${getActionTypeBadge(log.actionType)}</div>
+                                <div class="d-flex align-items-center mt-md-1">
+                                    <i class="bi bi-arrow-right-short text-muted d-none d-md-inline me-1"></i>
+                                    <span class="text-dark small">${log.target?.name || '-'}</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Col 3: Details -->
+                        <div class="flex-fill text-break small text-muted border-start-md ps-md-3">
+                            ${log.details || ''}
+                        </div>
+                    </div>
+                </div>
+            `;
+            }).join('');
         };
 
         function formatActionType(type) {
@@ -1884,13 +1909,13 @@
                 const isDistrict = currentRole === 'district_admin';
                 return `
                     <tr>
-                        <td class="fw-bold text-dark text-truncate" title="${s.name}">${s.name}</td>
+                        <td class="fw-bold text-dark text-break">${s.name}</td>
                         <td class="p-1">
-                             <div class="d-flex align-items-center gap-1">
-                                <select class="form-select form-select-sm border-secondary-subtle py-0" onchange="updateUserClass('${s.id}', this.value)" style="width: 85px; font-size: 0.9rem;">
+                             <div class="d-flex flex-column gap-1 align-items-start">
+                                <select class="form-select form-select-sm border-secondary-subtle py-0" onchange="updateUserClass('${s.id}', this.value)" style="width: 100%; font-size: 0.9rem;">
                                     ${classOrder.map(c => `<option value="${c}" ${s.class === c ? 'selected' : ''}>${c}</option>`).join('')}
                                 </select>
-                                <span class="badge bg-secondary-subtle text-dark border" style="font-size: 0.85rem;">${s.group || '-'}</span>
+                                <span class="badge bg-secondary-subtle text-dark border w-100" style="font-size: 0.85rem;">${s.group || '-'}</span>
                             </div>
                         </td>
                         <td class="p-1">
@@ -1902,9 +1927,9 @@
                             </div>
                         </td>
                         <td class="p-1">
-                            <div class="d-flex gap-1 justify-content-start">
-                                <button class="btn btn-sm btn-outline-secondary py-0 px-1" style="font-size: 0.85rem;" onclick="resetUserPassword('${s.id}', '${s.name}')">重置</button>
-                                <button class="btn btn-sm btn-outline-danger py-0 px-1" style="font-size: 0.85rem;" onclick="removeStudent('${s.id}')">刪除</button>
+                            <div class="d-flex flex-column gap-1">
+                                <button class="btn btn-sm btn-outline-secondary py-0 px-1 w-100" style="font-size: 0.85rem;" onclick="resetUserPassword('${s.id}', '${s.name}')">重置</button>
+                                <button class="btn btn-sm btn-outline-danger py-0 px-1 w-100" style="font-size: 0.85rem;" onclick="removeStudent('${s.id}')">刪除</button>
                             </div>
                         </td>
                     </tr>
