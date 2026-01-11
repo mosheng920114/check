@@ -708,36 +708,44 @@
             }
 
             list.innerHTML = filtered.map(log => {
-                const timeStr = log.timestamp?.toDate ? log.timestamp.toDate().toLocaleString() : new Date(log.timestamp).toLocaleString();
+                const dateObj = log.timestamp?.toDate ? log.timestamp.toDate() : new Date(log.timestamp);
+                const timeStr = dateObj.toLocaleString();
+                const mobileTime = `${dateObj.getMonth() + 1}/${dateObj.getDate()} ${dateObj.getHours().toString().padStart(2, '0')}:${dateObj.getMinutes().toString().padStart(2, '0')}`;
+
                 return `
                 <div class="list-group-item list-group-item-action p-2">
-                    <div class="d-flex flex-column flex-md-row gap-2 align-items-md-center">
-                        
-                        <!-- Col 1: Time & Actor -->
-                        <div class="" style="flex-basis: 20%; min-width: 180px;">
-                            <div class="d-flex flex-md-column justify-content-between align-items-center align-items-md-start">
-                                <small class="text-muted" style="font-size: 0.8rem;">${timeStr}</small>
-                                <div class="d-md-none text-muted mx-2">|</div> <!-- Mobile Separator -->
-                                <div>
-                                    <span class="fw-bold text-dark">${log.actor?.name || '未知'}</span>
-                                    <small class="text-muted d-none d-md-inline">(${formatRole(log.actor?.role)})</small>
-                                </div>
-                            </div>
+                    <!-- Mobile View -->
+                    <div class="d-md-none">
+                        <div class="d-flex align-items-center flex-wrap gap-2 mb-1">
+                            ${getActionTypeBadge(log.actionType)}
+                            <span class="fw-bold text-dark">${log.actor?.name || '未知'}</span>
+                            <i class="bi bi-caret-right-fill text-black-50 small"></i>
+                            <span class="text-dark">${log.target?.name || '-'}</span>
                         </div>
+                        <div class="mb-2">
+                            <small class="text-muted"><i class="bi bi-clock me-1"></i>${timeStr}</small>
+                        </div>
+                        <div class="bg-light p-2 rounded small text-break border-start border-3 border-secondary">
+                            ${log.details || '無詳細內容'}
+                        </div>
+                    </div>
 
-                        <!-- Col 2: Type & Target -->
-                        <div class="" style="flex-basis: 20%; min-width: 150px;">
-                            <div class="d-flex flex-md-column justify-content-between align-items-center align-items-md-start">
-                                <div>${getActionTypeBadge(log.actionType)}</div>
-                                <div class="d-flex align-items-center mt-md-1">
-                                    <i class="bi bi-arrow-right-short text-muted d-none d-md-inline me-1"></i>
-                                    <span class="text-dark small">${log.target?.name || '-'}</span>
-                                </div>
-                            </div>
+                    <!-- Desktop View -->
+                    <div class="d-none d-md-flex align-items-center gap-2">
+                        <!-- Col 1: Time / Actor -->
+                        <div style="flex-basis: 20%; min-width: 160px;">
+                            <div class="small text-muted mb-1">${timeStr}</div>
+                            <div class="fw-bold text-dark">${log.actor?.name || '未知'}</div>
+                        </div>
+                        
+                        <!-- Col 2: Type / Target -->
+                        <div style="flex-basis: 20%; min-width: 140px;">
+                            <div class="mb-1">${getActionTypeBadge(log.actionType)}</div>
+                            <div class="small text-dark">${log.target?.name || '-'}</div>
                         </div>
 
                         <!-- Col 3: Details -->
-                        <div class="flex-fill text-break small text-muted border-start-md ps-md-3">
+                        <div class="flex-fill text-break small text-muted border-start ps-3">
                             ${log.details || ''}
                         </div>
                     </div>
