@@ -716,16 +716,16 @@
                 <div class="list-group-item list-group-item-action p-2">
                     <!-- Mobile View -->
                     <div class="d-md-none">
-                        <div class="d-flex align-items-center flex-wrap gap-2 mb-1">
-                            ${getActionTypeBadge(log.actionType)}
-                            <span class="fw-bold text-dark">${log.actor?.name || '未知'}</span>
-                            <i class="bi bi-caret-right-fill text-black-50 small"></i>
-                            <span class="text-dark">${log.target?.name || '-'}</span>
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <div>${getActionTypeBadge(log.actionType)}</div>
+                            <small class="text-secondary opacity-75" style="font-size: 0.85rem;">${timeStr}</small>
                         </div>
-                        <div class="mb-2">
-                            <small class="text-muted"><i class="bi bi-clock me-1"></i>${timeStr}</small>
+                        <div class="d-flex align-items-center gap-2 mb-2 px-1">
+                            <span class="fw-bold text-dark fs-6">${log.actor?.name || '未知'}</span>
+                            <i class="bi bi-arrow-right text-muted"></i>
+                            <span class="text-dark fw-medium">${log.target?.name || '-'}</span>
                         </div>
-                        <div class="bg-light p-2 rounded small text-break border-start border-3 border-secondary">
+                        <div class="bg-body-secondary p-2 rounded small text-break border-start border-4 border-secondary text-muted">
                             ${log.details || '無詳細內容'}
                         </div>
                     </div>
@@ -1598,14 +1598,8 @@
             let canReset = false;
             if (currentUser.role === 'super_admin' || currentUser.role === 'general_admin') canReset = true;
             if (currentUser.role === 'class_admin' && currentUser.class === groupName) {
-                const isDining = (currentSession === '中午上餐廳' || currentSession === '晚上上餐廳');
-                if (scope === 'day') {
-                    // Class Admin cannot reset 'day' because it includes dining sessions which they don't manage
-                    canReset = false;
-                } else {
-                    // Scope is current. Allow only if NOT dining.
-                    canReset = !isDining;
-                }
+                // Class Admin can reset their own class (Day or Current)
+                canReset = true;
             }
             if (currentUser.role === 'group_admin' && currentUser.group === groupName) {
                 // Group admin logic: usually restricted to dining, but for "Reset" let's allow if it's their group?
