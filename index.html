@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>點名系統 v1.5</title>
+    <title>點名系統 v2.0</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     <style>
@@ -133,7 +133,7 @@
         <div class="d-flex justify-content-between align-items-center mb-3 header-top">
             <h2 class="fw-bold text-primary m-0 d-flex align-items-center">
                 <i class="bi bi-pencil-square me-2"></i>點名系統 <span
-                    class="badge bg-secondary fs-6 ms-2 rounded-pill">v1.5</span>
+                    class="badge bg-secondary fs-6 ms-2 rounded-pill">v2.0</span>
             </h2>
             <div class="header-actions">
                 <!-- Right Side: Settings & Add -->
@@ -166,6 +166,9 @@
                                 </li>
                                 <li><a class="dropdown-item d-none" id="adminManageLink" href="#"
                                         onclick="showAdminDashboard()"><i class="bi bi-people-fill me-2"></i>人員權限管理</a>
+                                </li>
+                                <li><a class="dropdown-item d-none" id="historyLogLink" href="#"
+                                        onclick="openHistoryModal()"><i class="bi bi-clock-history me-2"></i>查看歷史異動</a>
                                 </li>
                                 <li>
                                     <hr class="dropdown-divider">
@@ -409,26 +412,29 @@
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body">
-                    <div class="input-group mb-3">
-
-                        <span class="input-group-text"><i class="bi bi-search"></i></span>
-                        <input type="text" id="adminUserSearch" class="form-control" placeholder="搜尋姓名、班級、組別或權限..."
-                            oninput="renderAdminUserList()">
+                    <!-- Toolbar: Search + Action -->
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <div class="input-group input-group-sm" style="max-width: 300px;">
+                            <span class="input-group-text bg-white border-end-0"><i
+                                    class="bi bi-search text-muted"></i></span>
+                            <input type="text" id="adminUserSearch" class="form-control border-start-0 ps-0"
+                                placeholder="搜尋..." oninput="renderAdminUserList()">
+                        </div>
+                        <button id="deleteAllBtn" class="btn btn-outline-danger btn-sm d-none text-nowrap"
+                            onclick="deleteAllUsers()">
+                            <i class="bi bi-trash-fill me-1"></i>刪除全部
+                        </button>
                     </div>
-                    <div class="table-responsive">
-                        <table class="table table-hover align-middle">
+
+                    <div class="table-responsive border rounded" style="max-height: 70vh;">
+                        <table class="table table-hover table-sm align-middle mb-0"
+                            style="table-layout: fixed; font-size: 0.95rem;">
                             <thead class="table-light">
                                 <tr>
-                                    <th>姓名</th>
-                                    <th>班級 / 組別</th>
-                                    <th>權限角色</th>
-                                    <th>
-                                        操作
-                                        <button id="deleteAllBtn" class="btn btn-danger btn-sm ms-2 d-none"
-                                            onclick="deleteAllUsers()">
-                                            <i class="bi bi-trash-fill"></i> 一鍵刪除全部
-                                        </button>
-                                    </th>
+                                    <th style="width: 15%;">姓名</th>
+                                    <th style="width: 40%;">班級 / 組別</th>
+                                    <th style="width: 30%;">權限</th>
+                                    <th style="width: 15%;">操作</th>
                                 </tr>
                             </thead>
                             <tbody id="adminUserListBody">
@@ -501,18 +507,59 @@
         </div>
     </div>
 
+
+    <!-- History Log Modal -->
+    <div class="modal fade" id="historyModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered modal-xl modal-dialog-scrollable">
+            <div class="modal-content">
+                <div class="modal-header bg-info text-white">
+                    <h5 class="modal-title fw-bold"><i class="bi bi-clock-history me-2"></i>歷史異動紀錄 (最近7天)</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <div class="input-group" style="max-width: 300px;">
+                            <span class="input-group-text"><i class="bi bi-search"></i></span>
+                            <input type="text" id="historySearch" class="form-control" placeholder="搜尋操作者或內容..."
+                                oninput="renderLogs()">
+                        </div>
+                        <button class="btn btn-outline-secondary btn-sm" onclick="openHistoryModal(true)"><i
+                                class="bi bi-arrow-clockwise me-1"></i>重新整理</button>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle table-sm">
+                            <thead class="table-light">
+                                <tr>
+                                    <th style="width: 15%">時間</th>
+                                    <th style="width: 15%">操作者</th>
+                                    <th style="width: 15%">動作類型</th>
+                                    <th style="width: 15%">對象</th>
+                                    <th>詳細內容</th>
+                                </tr>
+                            </thead>
+                            <tbody id="historyLogBody">
+                                <!-- JS Generated -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Approval Modal -->
     <div class="modal fade" id="approvalModal" tabindex="-1">
         <div class="modal-dialog modal-dialog-centered modal-lg">
             <div class="modal-content">
                 <div class="modal-header bg-warning">
-                    <h5 class="modal-title fw-bold"><i class="bi bi-clipboard-check me-2"></i>審核申請</h5>
+                    <h5 class="modal-title fw-bold" id="approvalModalLabel"><i
+                            class="bi bi-clipboard-check me-2"></i>審核申請</h5>
                     <select id="approvalClassFilter" class="form-select form-select-sm ms-3" style="max-width: 150px;"
                         onchange="refreshApprovalModal()">
                         <option value="all">顯示全部</option>
                         <!-- Options populated via JS -->
                     </select>
-                    <div class="ms-auto me-2">
+                    <div class="ms-auto me-2" id="adminActionBtns">
                         <button class="btn btn-success btn-sm me-1"
                             onclick="batchHandleRequests('approve')">全部批准</button>
                         <button class="btn btn-danger btn-sm" onclick="batchHandleRequests('reject')">全部駁回</button>
@@ -532,7 +579,7 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-        import { getFirestore, collection, addDoc, onSnapshot, doc, updateDoc, deleteDoc, query, setDoc, getDocs, deleteField } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+        import { getFirestore, collection, addDoc, onSnapshot, doc, updateDoc, deleteDoc, query, setDoc, getDocs, deleteField, where, orderBy, limit } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyACL_67nXJU6RZEf3InFqHQJ-5h6FMZ7t8",
@@ -547,10 +594,189 @@
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
         const studentsRef = collection(db, "students");
-        const requestsRef = collection(db, "requests"); // New collection for approval requests
+        const requestsRef = collection(db, "requests");
+        const logsRef = collection(db, "logs"); // History Logs Collection
+
         const configRef = doc(db, "settings", "globalConfig");
 
-        const sessions = ["早點名", "早上上餐廳", "0740集合", "中午上餐廳", "1320集合", "晚上上餐廳", "晚自習", "晚點名", "備用點名"];
+        // --- Helper: Action Logger ---
+        window.logAction = async (actionType, target, details) => {
+            if (!currentUser) return;
+            try {
+                const now = new Date();
+                const expireAt = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000); // 7 Days retention
+                await addDoc(logsRef, {
+                    timestamp: now,
+                    expireAt: expireAt,
+                    actionType: actionType,
+                    actor: {
+                        id: currentUser.id,
+                        name: currentUser.name,
+                        role: currentUser.role
+                    },
+                    target: target ? {
+                        id: target.id || 'N/A',
+                        name: target.name || 'N/A'
+                    } : null,
+                    details: details || ''
+                });
+            } catch (e) {
+                console.error("Failed to log action:", e);
+            }
+        };
+
+        // --- History Modal Logic ---
+        let historyData = [];
+
+        window.openHistoryModal = async (forceRefresh = false) => {
+            if (!currentUser) return;
+            const modal = bootstrap.Modal.getOrCreateInstance(document.getElementById('historyModal'));
+            modal.show();
+
+            await cleanupLogs(); // Lazy delete expired logs
+
+            if (forceRefresh || historyData.length === 0) {
+                await fetchLogs();
+            } else {
+                renderLogs();
+            }
+        };
+
+        async function fetchLogs() {
+            const body = document.getElementById('historyLogBody');
+            body.innerHTML = '<tr><td colspan="5" class="text-center"><div class="spinner-border spinner-border-sm text-primary"></div> 載入中...</td></tr>';
+
+            try {
+                // Determine 7 days ago strictly
+                const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+
+                // Query: timestamp > 7 days ago. Order by timestamp desc.
+                // Note: Firestore requires index for range filter + sort.
+                // We will fetch based on 'timestamp' > sevenDaysAgo.
+                const q = query(logsRef, where("timestamp", ">", sevenDaysAgo), orderBy("timestamp", "desc"), limit(200));
+
+                const snapshot = await getDocs(q);
+                historyData = [];
+                snapshot.forEach(doc => {
+                    historyData.push({ id: doc.id, ...doc.data() });
+                });
+                renderLogs();
+            } catch (e) {
+                console.error(e);
+                // Fallback if index missing (Client-side filter)
+                if (e.message.includes('requires an index')) {
+                    console.warn("Index missing, falling back to all logs + client sort");
+                    const q2 = query(logsRef, orderBy("timestamp", "desc"), limit(200));
+                    try {
+                        const snap = await getDocs(q2);
+                        historyData = [];
+                        snap.forEach(doc => {
+                            const d = doc.data();
+                            if (d.timestamp.toDate() > new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)) {
+                                historyData.push({ id: doc.id, ...d });
+                            }
+                        });
+                        renderLogs();
+                    } catch (e2) {
+                        body.innerHTML = `<tr><td colspan="5" class="text-danger text-center">載入失敗: ${e2.message}</td></tr>`;
+                    }
+                } else {
+                    body.innerHTML = `<tr><td colspan="5" class="text-danger text-center">載入失敗: ${e.message}</td></tr>`;
+                }
+            }
+        }
+
+        async function cleanupLogs() {
+            // Optional: Periodically clean up
+            // Since client permission might be limited, maybe restrict this to admins?
+            // Or just rely on expireAt if we set up TTL policy in Backend (not available here).
+            // We do lazy delete on query mostly. 
+        }
+
+        window.renderLogs = () => {
+            const term = document.getElementById('historySearch').value.toLowerCase();
+            const body = document.getElementById('historyLogBody');
+
+            const filtered = historyData.filter(log => {
+                const actorName = (log.actor?.name || '').toLowerCase();
+                const details = (log.details || '').toLowerCase();
+                const targetName = (log.target?.name || '').toLowerCase();
+                const type = formatActionType(log.actionType).toLowerCase();
+                return actorName.includes(term) || details.includes(term) || targetName.includes(term) || type.includes(term);
+            });
+
+            if (filtered.length === 0) {
+                body.innerHTML = '<tr><td colspan="5" class="text-center text-muted">無紀錄</td></tr>';
+                return;
+            }
+
+            body.innerHTML = filtered.map(log => `
+                <tr>
+                    <td class="small text-muted">${log.timestamp?.toDate ? log.timestamp.toDate().toLocaleString() : new Date(log.timestamp).toLocaleString()}</td>
+                    <td><span class="badge bg-light text-dark border">${log.actor?.name || '未知'}</span> <small class="text-muted">(${formatRole(log.actor?.role)})</small></td>
+                    <td>${getActionTypeBadge(log.actionType)}</td>
+                    <td>${log.target?.name || '-'}</td>
+                    <td class="text-wrap small" style="max-width: 300px;">${log.details || ''}</td>
+                </tr>
+            `).join('');
+        };
+
+        function formatActionType(type) {
+            const map = {
+                'submit_request': '提交申請',
+                'approve_request': '審核通過',
+                'reject_request': '審核駁回',
+                'update_status': '修改狀態',
+                'batch_update': '快速差勤',
+                'update_role': '權限變更',
+                'update_managed_scope': '管轄變更',
+                'reset_password': '重置密碼',
+                'add_student': '新增人員',
+                'delete_student': '刪除人員',
+                'delete_all': '全部刪除'
+            };
+            return map[type] || type;
+        }
+
+        function getActionTypeBadge(type) {
+            const label = formatActionType(type);
+            let color = 'secondary';
+            if (type.includes('approve')) color = 'success';
+            if (type.includes('reject')) color = 'danger';
+            if (type.includes('update_status') || type.includes('batch')) color = 'primary';
+            if (type.includes('role') || type.includes('scope')) color = 'warning text-dark';
+            if (type.includes('delete')) color = 'danger';
+            return `<span class="badge bg-${color}">${label}</span>`;
+        }
+
+        function formatRole(role) {
+            const map = {
+                'super_admin': '超級管理員',
+                'general_admin': '管理員',
+                'district_admin': '實習區隊長',
+                'class_admin': '實習幹部',
+                'group_admin': '組別班代',
+                'student': '學生'
+            };
+            return map[role] || role;
+        }
+
+        // Base sessions (Mon, Wed-Sun)
+        const baseSessions = ["早點名", "早上上餐廳", "0740集合", "中午上餐廳", "1320集合", "晚上上餐廳", "晚自習", "晚點名", "備用點名"];
+        // Tuesday sessions
+        const tuesdaySessions = ["早點名", "早上上餐廳", "0740集合", "中午上餐廳", "1320集合", "第一節軍訓課", "第二節軍訓課", "晚上上餐廳", "晚自習", "晚點名", "備用點名"];
+
+        // Helper to get sessions for a specific day
+        function getSessionsForDay(day) {
+            return day === '星期二' ? tuesdaySessions : baseSessions;
+        }
+
+        // For backward compatibility (if needed) or general lists, we might need a superset
+        const allPossibleSessions = ["早點名", "早上上餐廳", "0740集合", "中午上餐廳", "1320集合", "第一節軍訓課", "第二節軍訓課", "晚上上餐廳", "晚自習", "晚點名", "備用點名"];
+
+        // Legacy 'sessions' variable usage replacement:
+        // We will default 'sessions' to baseSessions for initial load but code needs update
+        const sessions = baseSessions; // Default, but should use getSessionsForDay(currentDay) in logic
         const days = ["星期一", "星期二", "星期三", "星期四", "星期五", "星期六", "星期日"];
 
         let currentSession = sessions[0];
@@ -639,6 +865,7 @@
         }
 
         // Export Modal Logic
+        // Export Modal Logic
         window.openExportModal = (type, value, title) => {
             const modalTitle = document.getElementById('exportModalTitle');
             const daySelect = document.getElementById('exportDaySelect');
@@ -654,13 +881,25 @@
                 `<option value="${d}" ${d === currentDay ? 'selected' : ''}>${d}</option>`
             ).join('');
 
-            // Populate Sessions
-            sessionChecks.innerHTML = sessions.map((s, idx) => `
-                <div class="form-check">
-                    <input class="form-check-input" type="checkbox" value="${s}" id="exportSession${idx}" ${s === currentSession ? 'checked' : ''}>
-                    <label class="form-check-label" for="exportSession${idx}">${s}</label>
-                </div>
-            `).join('');
+            // Function to render sessions based on selected day
+            window.renderExportSessions = (day) => {
+                const daySessions = getSessionsForDay(day);
+                // Pre-check currentSession if it exists in the new list, otherwise check nothing or defaults
+                sessionChecks.innerHTML = daySessions.map((s, idx) => `
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" value="${s}" id="exportSession${idx}" ${s === currentSession ? 'checked' : ''}>
+                        <label class="form-check-label" for="exportSession${idx}">${s}</label>
+                    </div>
+                `).join('');
+            };
+
+            // Attach onchange handler
+            daySelect.onchange = (e) => {
+                renderExportSessions(e.target.value);
+            };
+
+            // Initial Render
+            renderExportSessions(currentDay);
 
             bootstrap.Modal.getOrCreateInstance(document.getElementById('exportModal')).show();
         };
@@ -830,10 +1069,17 @@
         }
 
         function initSessionTabs() {
-            const container = document.getElementById('sessionTabs');
-            container.innerHTML = sessions.map(s => `
-                <button class="btn ${currentSession === s ? 'btn-primary' : 'btn-white bg-white border'} rounded-pill text-nowrap px-3 shadow-sm" 
-                        onclick="changeSession('${s}')">${currentDay} - ${s}</button>
+            const slider = document.getElementById('sessionTabs');
+            // Get correct sessions for current day
+            const currentDaySessions = getSessionsForDay(currentDay);
+
+            // Validate currentSession. If not in new list, reset to first.
+            if (!currentDaySessions.includes(currentSession)) {
+                currentSession = currentDaySessions[0];
+            }
+
+            slider.innerHTML = currentDaySessions.map(s => `
+                <button class="btn ${s === currentSession ? 'btn-primary' : 'btn-outline-secondary'} rounded-pill text-nowrap px-2" onclick="changeSession('${s}')">${s}</button>
             `).join('');
         }
 
@@ -1195,6 +1441,7 @@
                     timestamp: new Date()
                 });
                 document.getElementById('inputName').value = '';
+                logAction('add_student', { name: nameInput }, `新增人員: ${nameInput} (${classInput}/${groupInput})`);
             } catch (e) { console.error(e); alert("新增失敗"); }
         };
         window.batchAddStudents = async () => {
@@ -1220,6 +1467,7 @@
             try {
                 await Promise.all(promises);
                 alert("匯入成功！");
+                logAction('add_student', { name: 'Batch Import' }, `批量新增人員 (${promises.length} 筆)`);
                 bootstrap.Modal.getOrCreateInstance(document.getElementById('batchAddModal')).hide();
                 document.getElementById('batchInput').value = '';
             } catch (e) { console.error(e); alert("匯入失敗"); }
@@ -1258,6 +1506,7 @@
                 try {
                     const studentRef = doc(db, "students", id);
                     await updateDoc(studentRef, { [`status.${statusKey}`]: val });
+                    logAction('update_status', student, `直接修改狀態: ${statusKey} -> ${val}`);
                 } catch (e) {
                     console.error("Error updating status: ", e);
                     alert("更新失敗: " + e.message);
@@ -1281,6 +1530,7 @@
                         status: 'pending' // pending, approved, rejected
                     });
                     alert("已送出狀態變更申請，請等待幹部審核。");
+                    logAction('submit_request', student, `提交狀態變更申請: ${statusKey} -> ${val}`);
                     // Reset select to original value visually (will be handled by re-render, but good specifically)
                     renderAll();
                 } catch (e) {
@@ -1291,7 +1541,10 @@
         };
         window.removeStudent = async (id) => {
             if (!currentUser || (currentUser.role !== 'super_admin' && currentUser.role !== 'general_admin')) return alert("權限不足");
-            if (confirm('確定刪除？')) await deleteDoc(doc(db, "students", id));
+            if (confirm('確定刪除？')) {
+                await deleteDoc(doc(db, "students", id));
+                logAction('delete_student', { id: id, name: 'ID:' + id }, `刪除人員 ID: ${id}`);
+            }
         };
         window.addNewStatusType = async () => {
             if (!currentUser || !['super_admin', 'general_admin', 'class_admin', 'group_admin', 'district_admin'].includes(currentUser.role)) return alert("權限不足");
@@ -1383,7 +1636,8 @@
                     }
                 } else {
                     // 'day' scope: reset all sessions for currentDay
-                    sessions.forEach(sess => {
+                    const targetSessions = getSessionsForDay(currentDay);
+                    targetSessions.forEach(sess => {
                         const key = `${currentDay}_${sess}`;
                         if (s.status && s.status[key] && s.status[key] !== '實到') {
                             updates[`status.${key}`] = deleteField();
@@ -1404,6 +1658,7 @@
             try {
                 await Promise.all(promises);
                 alert(`已重置 ${updateCount} 位學生的狀態。`);
+                logAction('batch_update', { name: groupName }, `批量重置狀態 (${scope === 'current' ? '本時段' : '今天'}): ${groupName}`);
                 renderAll(); // Should trigger automatically by snapshot but good to force
             } catch (e) {
                 console.error(e);
@@ -1497,7 +1752,25 @@
 
                 userNameDisplay.innerHTML = `${currentUser.name} <span class="badge bg-secondary ms-1" style="font-size: 0.7em;">${roleName}</span>`;
 
-                if (isAdmin) {
+                // Notification Button Logic
+                const relevantRequests = getRelevantRequests(); // Pre-calc to decide visibility if needed, or just let updateNotificationBadge handle it
+                // Actually updateNotificationBadge controls visibility based on count.
+                // We just need to make sure the BUTTON element itself isn't hidden by role hardcoding if count > 0.
+                // The current code hides it if !isAdmin. Reference line 1758.
+
+                // New Logic: Always show if count > 0? Or just remove the 'd-none' toggle here and let updateNotificationBadge handle it?
+                // updateNotificationBadge adds/removes d-none on the badge. The button itself might be hidden?
+                // The HMTL for button is: <button class="btn btn-link nav-link position-relative d-none" id="notificationBtn" ...> (Assuming initial state)
+                // Let's check line 1758 in original:
+                // if (isAdmin) { notificationBtn.classList.remove('d-none'); ... } else { notificationBtn.classList.add('d-none'); }
+
+                // We want to allow it for Students too. So basic logic:
+                // Show button if isAdmin OR if (isStudent AND hasNotifications).
+                // Simpler: Just rely on updateNotificationBadge?
+                // But updateNotificationBadge toggles the *Badge*. The Button containing the Icon might be hidden.
+                // Let's change the condition to allow students.
+
+                if (isAdmin || currentUser.role === 'student') {
                     notificationBtn.classList.remove('d-none');
                     updateNotificationBadge();
                 } else {
@@ -1511,6 +1784,26 @@
                 }
 
                 // Control Add Student Button visibility
+                // Show/Hide Admin Links
+                // adminManageLink is already defined at the top of updateAuthUI
+                const historyLink = document.getElementById('historyLogLink');
+
+                if (currentUser.role === 'super_admin') {
+                    if (adminManageLink) adminManageLink.classList.remove('d-none');
+                } else {
+                    if (adminManageLink) adminManageLink.classList.add('d-none');
+                }
+
+                // History Link: Class Admin and above
+                if (historyLink) {
+                    if (['class_admin', 'group_admin', 'district_admin', 'general_admin', 'super_admin'].includes(currentUser.role)) {
+                        historyLink.classList.remove('d-none');
+                    } else {
+                        historyLink.classList.add('d-none');
+                    }
+                }
+
+                // Show Notification Bell check...
                 const addStudentBtn = document.getElementById('addStudentBtn');
                 if (currentUser.role === 'super_admin') {
                     addStudentBtn.classList.remove('d-none');
@@ -1547,10 +1840,15 @@
         };
 
         window.renderAdminUserList = () => {
+            // Show/Hide Delete All Button based on role
             if (currentUser && currentUser.role === 'super_admin') {
                 const btn = document.getElementById('deleteAllBtn');
                 if (btn) btn.classList.remove('d-none');
+            } else {
+                const btn = document.getElementById('deleteAllBtn');
+                if (btn) btn.classList.add('d-none');
             }
+
             const tbody = document.getElementById('adminUserListBody');
             const term = document.getElementById('adminUserSearch').value.toLowerCase();
             const filterClass = document.getElementById('adminClassFilter') ? document.getElementById('adminClassFilter').value : 'all';
@@ -1559,7 +1857,7 @@
                 { val: 'student', label: '學生' },
                 { val: 'group_admin', label: '組別班代' },
                 { val: 'class_admin', label: '實習幹部' },
-                { val: 'district_admin', label: '實習區隊長' }, // Added
+                { val: 'district_admin', label: '實習區隊長' },
                 { val: 'general_admin', label: '管理員' }
             ];
 
@@ -1576,31 +1874,38 @@
                 return matchesSearch && matchesFilter;
             });
 
+            if (filtered.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="4" class="text-center text-muted py-4">沒有符合的搜尋結果</td></tr>`;
+                return;
+            }
+
             tbody.innerHTML = filtered.map(s => {
                 const currentRole = s.role || 'student';
-                const isDistrict = currentRole === 'district_admin'; // Check for button
+                const isDistrict = currentRole === 'district_admin';
                 return `
                     <tr>
-                        <td>${s.name}</td>
-                        <td>
-                             <div class="d-flex align-items-center">
-                                <select class="form-select form-select-sm me-1" onchange="updateUserClass('${s.id}', this.value)" style="width: auto; min-width: 80px;">
+                        <td class="fw-bold text-dark text-truncate" title="${s.name}">${s.name}</td>
+                        <td class="p-1">
+                             <div class="d-flex align-items-center gap-1">
+                                <select class="form-select form-select-sm border-secondary-subtle py-0" onchange="updateUserClass('${s.id}', this.value)" style="width: 85px; font-size: 0.9rem;">
                                     ${classOrder.map(c => `<option value="${c}" ${s.class === c ? 'selected' : ''}>${c}</option>`).join('')}
                                 </select>
-                                <small class="text-muted text-nowrap">(${s.group || '-'})</small>
+                                <span class="badge bg-secondary-subtle text-dark border" style="font-size: 0.85rem;">${s.group || '-'}</span>
                             </div>
                         </td>
-                        <td>
-                            <div class="d-flex align-items-center">
-                                <select class="form-select form-select-sm me-1" onchange="updateUserRole('${s.id}', this.value)" style="width: auto;">
+                        <td class="p-1">
+                            <div class="d-flex align-items-center gap-1">
+                                <select class="form-select form-select-sm border-primary-subtle py-0" onchange="updateUserRole('${s.id}', this.value)" style="font-size: 0.9rem; width: 100%;">
                                     ${roleOptions.map(opt => `<option value="${opt.val}" ${currentRole === opt.val ? 'selected' : ''}>${opt.label}</option>`).join('')}
                                 </select>
-                                ${isDistrict ? `<button class="btn btn-sm btn-outline-warning" onclick="openScopeConfigModal('${s.id}')"><i class="bi bi-gear"></i></button>` : ''}
+                                ${isDistrict ? `<button class="btn btn-sm btn-outline-warning py-0 px-1" title="設定管轄範圍" onclick="openScopeConfigModal('${s.id}')"><i class="bi bi-gear-fill" style="font-size: 0.9rem;"></i></button>` : ''}
                             </div>
                         </td>
-                        <td>
-                            <button class="btn btn-sm btn-outline-secondary me-1" onclick="resetUserPassword('${s.id}', '${s.name}')">重置密碼</button>
-                            <button class="btn btn-sm btn-outline-danger" onclick="removeStudent('${s.id}')">刪除</button>
+                        <td class="p-1">
+                            <div class="d-flex gap-1 justify-content-start">
+                                <button class="btn btn-sm btn-outline-secondary py-0 px-1" style="font-size: 0.85rem;" onclick="resetUserPassword('${s.id}', '${s.name}')">重置</button>
+                                <button class="btn btn-sm btn-outline-danger py-0 px-1" style="font-size: 0.85rem;" onclick="removeStudent('${s.id}')">刪除</button>
+                            </div>
                         </td>
                     </tr>
                 `;
@@ -1617,9 +1922,10 @@
                 await updateDoc(doc(db, "students", uid), { class: newClass });
                 // Optimistic update
                 const student = studentsData.find(s => s.id === uid);
-                if (student) student.class = newClass;
-                // Render list again isn't strictly necessary if optimistic update works, 
-                // but good for consistency. However, onchange already changed the UI.
+                if (student) {
+                    student.class = newClass;
+                    logAction('update_role', { id: uid, name: student.name }, `修改班級 -> ${newClass}`);
+                }
             } catch (e) {
                 console.error(e);
                 alert("更新班級失敗: " + e.message);
@@ -1635,8 +1941,9 @@
             }
             try {
                 await updateDoc(doc(db, "students", uid), { role: newRole });
-                // alert("權限已更新");
-                studentsData.find(s => s.id === uid).role = newRole; // Optimistic update
+                const student = studentsData.find(s => s.id === uid); // Fetch for log
+                if (student) student.role = newRole; // Optimistic update
+                logAction('update_role', { id: uid, name: student?.name }, `修改角色 -> ${newRole}`);
             } catch (e) {
                 console.error(e);
                 alert("更新失敗: " + e.message);
@@ -1647,6 +1954,7 @@
             if (!confirm(`確定要將 ${name} 的密碼重置為 0000 嗎？`)) return;
             try {
                 await updateDoc(doc(db, "students", uid), { password: '0000' });
+                logAction('reset_password', { id: uid, name: name }, `重置密碼為 0000`);
                 alert("密碼已重置為 0000");
             } catch (e) {
                 console.error(e);
@@ -1695,6 +2003,7 @@
                     await batch.commit();
                 }
 
+                logAction('delete_all', { name: 'All Users' }, `刪除所有使用者 (${total} 筆)`);
                 alert(`已成功刪除 ${total} 筆使用者資料。`);
                 studentsData = []; // Clear local
                 renderAll();
@@ -1708,7 +2017,15 @@
 
         function getRelevantRequests() {
             if (!currentUser) return [];
+
             return pendingRequests.filter(req => {
+                // 1. For Students: Show Approved/Rejected (Results)
+                if (currentUser.role === 'student') {
+                    if (req.studentId !== currentUser.id) return false;
+                    return (req.status === 'approved' || req.status === 'rejected');
+                }
+
+                // 2. For Admins: Show Pending Only
                 if (req.status !== 'pending') return false;
 
                 if (currentUser.role === 'super_admin' || currentUser.role === 'general_admin') return true;
@@ -1761,7 +2078,10 @@
                 await updateDoc(doc(db, "students", uid), { managedClasses: selectedClasses });
                 // Optimistic update
                 const s = studentsData.find(st => st.id === uid);
-                if (s) s.managedClasses = selectedClasses;
+                if (s) {
+                    s.managedClasses = selectedClasses;
+                    logAction('update_managed_scope', { id: uid, name: s.name }, `更新管轄範圍: ${selectedClasses.join(', ')}`);
+                }
 
                 alert("權限範圍已更新！");
                 bootstrap.Modal.getInstance(document.getElementById('scopeConfigModal')).hide();
@@ -1796,49 +2116,119 @@
         window.showApprovalModal = () => {
             const list = document.getElementById('approvalList');
             const relevant = getRelevantRequests();
+            const isStudent = (currentUser.role === 'student');
 
-            // Populate Filter Options if empty
-            const filterSel = document.getElementById('approvalClassFilter');
-            if (filterSel && filterSel.options.length === 1) {
-                const opts = [
-                    ...classOrder.map(c => `<option value="${c}">${c}</option>`),
-                    ...groupOrder.map(g => `<option value="${g}">${g}</option>`)
-                ];
-                filterSel.innerHTML += opts.join('');
+            // Set Modal Title based on mode
+            const titleLabel = document.getElementById('approvalModalLabel');
+            if (titleLabel) titleLabel.innerText = isStudent ? '審核結果通知' : '審核申請';
+
+            // Hide/Show Admin Buttons in Header (Approve All / Reject All)
+            const adminBtnContainer = document.getElementById('adminActionBtns');
+            if (adminBtnContainer) {
+                adminBtnContainer.style.display = isStudent ? 'none' : 'block';
             }
 
-            const filterVal = filterSel ? filterSel.value : 'all';
+            // Handle "Mark All Read" button for students
+            let markAllBtn = document.getElementById('markAllReadBtn');
+            if (isStudent) {
+                if (!markAllBtn) {
+                    markAllBtn = document.createElement('button');
+                    markAllBtn.id = 'markAllReadBtn';
+                    markAllBtn.className = 'btn btn-primary btn-sm ms-auto me-2'; // Use ms-auto to push to right
+                    markAllBtn.innerText = '全部已讀';
+                    markAllBtn.onclick = () => handleRequest(null, 'read_all');
+
+                    // Insert logic
+                    const header = document.querySelector('#approvalModal .modal-header');
+                    const closeBtn = document.querySelector('#approvalModal .modal-header .btn-close');
+
+                    if (closeBtn) {
+                        header.insertBefore(markAllBtn, closeBtn);
+                    } else {
+                        header.appendChild(markAllBtn);
+                    }
+                }
+                markAllBtn.style.display = 'block';
+            } else {
+                if (markAllBtn) markAllBtn.style.display = 'none';
+            }
+
+            // Populate Filter Options if empty (Only for Admin)
+            if (!isStudent) {
+                const filterSel = document.getElementById('approvalClassFilter');
+                if (filterSel && filterSel.options.length === 1) {
+                    const opts = [
+                        ...classOrder.map(c => `<option value="${c}">${c}</option>`),
+                        ...groupOrder.map(g => `<option value="${g}">${g}</option>`)
+                    ];
+                    filterSel.innerHTML += opts.join('');
+                }
+                if (filterSel) filterSel.style.display = 'block'; // Show filter
+            } else {
+                const filterSel = document.getElementById('approvalClassFilter');
+                if (filterSel) filterSel.style.display = 'none'; // Hide filter for student
+            }
+
+            const filterVal = (!isStudent && document.getElementById('approvalClassFilter')) ? document.getElementById('approvalClassFilter').value : 'all';
             const filtered = relevant.filter(req => filterVal === 'all' || req.studentClass === filterVal || req.studentGroup === filterVal);
 
             if (filtered.length === 0) {
-                list.innerHTML = `<div class="text-center p-4 text-muted">目前沒有待審核的申請</div>`;
+                list.innerHTML = `<div class="text-center p-4 text-muted">${isStudent ? '目前沒有新的通知' : '目前沒有待審核的申請'}</div>`;
             } else {
-                list.innerHTML = filtered.map(req => `
-            <div class="list-group-item d-flex justify-content-between align-items-center">
-                        <div>
-                            <div class="d-flex align-items-center mb-1">
-                                <span class="fw-bold me-2">${req.studentName}</span>
-                                <span class="badge bg-light text-secondary border me-2">${req.studentClass}/${req.studentGroup}</span>
-                                <span class="badge bg-warning text-dark">${req.dayName || ''} ${req.sessionName}</span>
+                list.innerHTML = filtered.map(req => {
+                    if (isStudent) {
+                        // Student Notification Item
+                        const isApproved = req.status === 'approved';
+                        return `
+                        <div class="list-group-item d-flex justify-content-between align-items-center">
+                            <div>
+                                <div class="d-flex align-items-center mb-1">
+                                    <span class="badge ${isApproved ? 'bg-success' : 'bg-danger'} me-2">${isApproved ? '已批准' : '已駁回'}</span>
+                                    <span class="fw-bold me-2">${req.dayName || ''} ${req.sessionName}</span>
+                                </div>
+                                <div class="small">
+                                    <span class="text-muted">申請變更：</span>
+                                    <span class="text-decoration-line-through text-muted mx-1">${req.originStatus}</span>
+                                    <i class="bi bi-arrow-right mx-1"></i>
+                                    <span class="fw-bold ${isApproved ? 'text-success' : 'text-danger'}">${req.newStatus}</span>
+                                </div>
+                                <div class="text-muted" style="font-size: 0.75rem;">${new Date(req.timestamp).toLocaleString()}</div>
                             </div>
-                            <div class="small">
-                                <span class="text-muted">由 ${req.requesterName} 申請：</span>
-                                <span class="text-decoration-line-through text-muted mx-1">${req.originStatus}</span>
-                                <i class="bi bi-arrow-right mx-1"></i>
-                                <span class="fw-bold text-danger">${req.newStatus}</span>
+                            <div class="d-flex align-items-center">
+                                <button class="btn btn-outline-primary btn-sm" onclick="handleRequest('${req.id}', 'read')">
+                                    <i class="bi bi-check-all"></i> 已讀
+                                </button>
                             </div>
-                            <div class="text-muted" style="font-size: 0.75rem;">${new Date(req.timestamp).toLocaleString()}</div>
-                        </div>
-                        <div class="d-flex align-items-center">
-                            <button class="btn btn-success btn-sm me-2" onclick="handleRequest('${req.id}', 'approve')">
-                                <i class="bi bi-check-lg"></i> 批准
-                            </button>
-                            <button class="btn btn-outline-danger btn-sm" onclick="handleRequest('${req.id}', 'reject')">
-                                <i class="bi bi-x-lg"></i> 駁回
-                            </button>
-                        </div>
-                    </div>
-            `).join('');
+                        </div>`;
+                    } else {
+                        // Admin Approval Item (Existing)
+                        return `
+                        <div class="list-group-item d-flex justify-content-between align-items-center">
+                            <div>
+                                <div class="d-flex align-items-center mb-1">
+                                    <span class="fw-bold me-2">${req.studentName}</span>
+                                    <span class="badge bg-light text-secondary border me-2">${req.studentClass}/${req.studentGroup}</span>
+                                    <span class="badge bg-warning text-dark">${req.dayName || ''} ${req.sessionName}</span>
+                                </div>
+                                <div class="small">
+                                    <span class="text-muted">由 ${req.requesterName} 申請：</span>
+                                    <span class="text-decoration-line-through text-muted mx-1">${req.originStatus}</span>
+                                    <i class="bi bi-arrow-right mx-1"></i>
+                                    <span class="fw-bold text-danger">${req.newStatus}</span>
+                                </div>
+                                <div class="text-muted" style="font-size: 0.75rem;">${new Date(req.timestamp).toLocaleString()}</div>
+                            </div>
+                            <div class="d-flex align-items-center">
+                                <button class="btn btn-success btn-sm me-2" onclick="handleRequest('${req.id}', 'approve')">
+                                    <i class="bi bi-check-lg"></i> 批准
+                                </button>
+                                <button class="btn btn-outline-danger btn-sm" onclick="handleRequest('${req.id}', 'reject')">
+                                    <i class="bi bi-x-lg"></i> 駁回
+                                </button>
+                            </div>
+                        </div>`;
+                    }
+                }).join('');
             }
             bootstrap.Modal.getOrCreateInstance(document.getElementById('approvalModal')).show();
         };
@@ -1862,10 +2252,16 @@
                         // Fix: Removed trailing space in key
                         await updateDoc(studentRef, { [`status.${req.targetSession}`]: req.newStatus });
                     }
-                    await deleteDoc(doc(db, "requests", req.id));
+                    // OLD: await deleteDoc(doc(db, "requests", req.id));
+                    // NEW: Mark request as approved/rejected for notification
+                    await updateDoc(doc(db, "requests", req.id), { status: action === 'approve' ? 'approved' : 'rejected' });
                     count++;
                 }
                 // alert("批量操作完成");
+                const processedNames = [...new Set(toProcess.map(r => r.studentName))].join(', ');
+                const detailStr = toProcess.map(r => `${r.studentName} ${r.sessionName} -> ${r.newStatus}`).join(', ');
+
+                logAction(action === 'approve' ? 'approve_request' : 'reject_request', { name: processedNames || '多位學生' }, `批量${action === 'approve' ? '批准' : '駁回'} ${count} 筆申請: ${detailStr}`);
                 // refreshApprovalModal(); // Will be triggered by listener snapshot
             } catch (e) {
                 console.error(e);
@@ -1874,8 +2270,29 @@
         };
 
         window.handleRequest = async (reqId, action) => {
+            // Fix: Handle global actions like 'read_all' first, as they don't have a specific reqId
+            if (action === 'read_all') {
+                if (!confirm("確定要將所有通知標記為已讀？")) return;
+                const relevant = getRelevantRequests(); // Already filtered for student results
+                try {
+                    const deletePromises = relevant.map(r => deleteDoc(doc(db, "requests", r.id)));
+                    await Promise.all(deletePromises);
+                    // alert("全部已讀完成");
+                } catch (e) { console.error(e); alert("操作失敗: " + e.message); }
+                return;
+            }
+
             const req = pendingRequests.find(r => r.id === reqId);
             if (!req) return;
+
+            // Differentiate actions: 'approve', 'reject', 'read'
+            if (action === 'read') {
+                try {
+                    await deleteDoc(doc(db, "requests", reqId));
+                    // No log needed for reading notification? Or maybe verbose log.
+                } catch (e) { console.error(e); alert("操作失敗"); }
+                return;
+            }
 
             if (!confirm(`確定要 ${action === 'approve' ? '批准' : '駁回'} ${req.studentName} 的申請嗎？`)) return;
 
@@ -1886,11 +2303,15 @@
                     // Fix: Removed trailing space in key
                     await updateDoc(studentRef, { [`status.${req.targetSession}`]: req.newStatus });
 
-                    // 2. Delete Request
-                    await deleteDoc(doc(db, "requests", reqId));
+                    // OLD: await deleteDoc(doc(db, "requests", reqId));
+                    await updateDoc(doc(db, "requests", reqId), { status: 'approved' });
+
+                    logAction('approve_request', { id: req.studentId, name: req.studentName }, `批准申請: ${req.targetSession} -> ${req.newStatus}`);
                 } else {
-                    // Reject: Just delete request
-                    await deleteDoc(doc(db, "requests", reqId));
+                    // Reject: Update status for notification
+                    // OLD: await deleteDoc(doc(db, "requests", reqId));
+                    await updateDoc(doc(db, "requests", reqId), { status: 'rejected' });
+                    logAction('reject_request', { id: req.studentId, name: req.studentName }, `駁回申請: ${req.targetSession} -> ${req.newStatus}`);
                 }
             } catch (e) {
                 console.error(e);
@@ -1899,66 +2320,93 @@
         };
 
         // Helper to refresh modal list if open
+        // Helper to refresh modal list if open
         window.refreshApprovalModal = () => {
-            console.log("refreshApprovalModal called");
+            // console.log("refreshApprovalModal called");
             const modalEl = document.getElementById('approvalModal');
             if (modalEl && modalEl.classList.contains('show')) {
-                // Re-use logic from showApprovalModal but only update list
                 const list = document.getElementById('approvalList');
                 const relevant = getRelevantRequests();
+                const isStudent = (currentUser.role === 'student');
 
                 const filterSel = document.getElementById('approvalClassFilter');
-                // Ensure options populated (should be already)
-                if (filterSel && filterSel.options.length === 1) {
-                    const opts = [
-                        ...classOrder.map(c => `<option value="${c}">${c}</option>`),
-                        ...groupOrder.map(g => `<option value="${g}">${g}</option>`)
-                    ];
-                    filterSel.innerHTML += opts.join('');
+                if (filterSel && !isStudent) {
+                    if (filterSel.options.length === 1) {
+                        const opts = [
+                            ...classOrder.map(c => `<option value="${c}">${c}</option>`),
+                            ...groupOrder.map(g => `<option value="${g}">${g}</option>`)
+                        ];
+                        filterSel.innerHTML += opts.join('');
+                    }
                 }
-                const filterVal = filterSel ? filterSel.value : 'all';
-                console.log("Filter Value:", filterVal);
 
-                // Safe trim just in case of whitespace
+                const filterVal = (filterSel && !isStudent) ? filterSel.value : 'all';
                 const cleanFilterVal = filterVal.trim();
 
                 const filtered = relevant.filter(req => {
                     if (cleanFilterVal === 'all') return true;
-                    // Check both class and group
                     const sClass = (req.studentClass || '').trim();
                     const sGroup = (req.studentGroup || '').trim();
                     return sClass === cleanFilterVal || sGroup === cleanFilterVal;
                 });
 
                 if (filtered.length === 0) {
-                    list.innerHTML = `<div class="text-center p-4 text-muted">目前沒有待審核的申請</div>`;
+                    list.innerHTML = `<div class="text-center p-4 text-muted">${isStudent ? '目前沒有新的通知' : '目前沒有待審核的申請'}</div>`;
                 } else {
-                    list.innerHTML = filtered.map(req => `
-            <div class="list-group-item d-flex justify-content-between align-items-center">
-                        <div>
-                            <div class="d-flex align-items-center mb-1">
-                                <span class="fw-bold me-2">${req.studentName}</span>
-                                <span class="badge bg-light text-secondary border me-2">${req.studentClass}/${req.studentGroup}</span>
-                                <span class="badge bg-warning text-dark">${req.dayName || ''} ${req.sessionName}</span>
-                            </div>
-                            <div class="small">
-                                <span class="text-muted">由 ${req.requesterName} 申請：</span>
-                                <span class="text-decoration-line-through text-muted mx-1">${req.originStatus}</span>
-                                <i class="bi bi-arrow-right mx-1"></i>
-                                <span class="fw-bold text-danger">${req.newStatus}</span>
-                            </div>
-                            <div class="text-muted" style="font-size: 0.75rem;">${new Date(req.timestamp).toLocaleString()}</div>
-                        </div>
-                        <div class="d-flex align-items-center">
-                            <button class="btn btn-success btn-sm me-2" onclick="handleRequest('${req.id}', 'approve')">
-                                <i class="bi bi-check-lg"></i> 批准
-                            </button>
-                            <button class="btn btn-outline-danger btn-sm" onclick="handleRequest('${req.id}', 'reject')">
-                                <i class="bi bi-x-lg"></i> 駁回
-                            </button>
-                        </div>
-                    </div>
-            `).join('');
+                    list.innerHTML = filtered.map(req => {
+                        if (isStudent) {
+                            // Student Notification Item
+                            const isApproved = req.status === 'approved';
+                            return `
+                            <div class="list-group-item d-flex justify-content-between align-items-center">
+                                <div>
+                                    <div class="d-flex align-items-center mb-1">
+                                        <span class="badge ${isApproved ? 'bg-success' : 'bg-danger'} me-2">${isApproved ? '已批准' : '已駁回'}</span>
+                                        <span class="fw-bold me-2">${req.dayName || ''} ${req.sessionName}</span>
+                                    </div>
+                                    <div class="small">
+                                        <span class="text-muted">申請變更：</span>
+                                        <span class="text-decoration-line-through text-muted mx-1">${req.originStatus}</span>
+                                        <i class="bi bi-arrow-right mx-1"></i>
+                                        <span class="fw-bold ${isApproved ? 'text-success' : 'text-danger'}">${req.newStatus}</span>
+                                    </div>
+                                    <div class="text-muted" style="font-size: 0.75rem;">${new Date(req.timestamp).toLocaleString()}</div>
+                                </div>
+                                <div class="d-flex align-items-center">
+                                    <button class="btn btn-outline-primary btn-sm" onclick="handleRequest('${req.id}', 'read')">
+                                        <i class="bi bi-check-all"></i> 已讀
+                                    </button>
+                                </div>
+                            </div>`;
+                        } else {
+                            // Admin Approval Item
+                            return `
+                            <div class="list-group-item d-flex justify-content-between align-items-center">
+                                <div>
+                                    <div class="d-flex align-items-center mb-1">
+                                        <span class="fw-bold me-2">${req.studentName}</span>
+                                        <span class="badge bg-light text-secondary border me-2">${req.studentClass}/${req.studentGroup}</span>
+                                        <span class="badge bg-warning text-dark">${req.dayName || ''} ${req.sessionName}</span>
+                                    </div>
+                                    <div class="small">
+                                        <span class="text-muted">由 ${req.requesterName} 申請：</span>
+                                        <span class="text-decoration-line-through text-muted mx-1">${req.originStatus}</span>
+                                        <i class="bi bi-arrow-right mx-1"></i>
+                                        <span class="fw-bold text-danger">${req.newStatus}</span>
+                                    </div>
+                                    <div class="text-muted" style="font-size: 0.75rem;">${new Date(req.timestamp).toLocaleString()}</div>
+                                </div>
+                                <div class="d-flex align-items-center">
+                                    <button class="btn btn-success btn-sm me-2" onclick="handleRequest('${req.id}', 'approve')">
+                                        <i class="bi bi-check-lg"></i> 批准
+                                    </button>
+                                    <button class="btn btn-outline-danger btn-sm" onclick="handleRequest('${req.id}', 'reject')">
+                                        <i class="bi bi-x-lg"></i> 駁回
+                                    </button>
+                                </div>
+                            </div>`;
+                        }
+                    }).join('');
                 }
             }
         };
@@ -2310,8 +2758,8 @@
                 </div>
             `).join('');
 
-            // 3. Populate Session Checkboxes
-            sessionContainer.innerHTML = sessions.map(s => `
+            // 3. Populate Session Checkboxes (Show ALL possible sessions for Quick Status)
+            sessionContainer.innerHTML = allPossibleSessions.map(s => `
                 <div class="form-check form-check-inline mb-2">
                     <input class="form-check-input" type="checkbox" name="qsSession" value="${s}" id="qsSession_${s}">
                     <label class="form-check-label" for="qsSession_${s}">${s}</label>
@@ -2384,7 +2832,19 @@
                     // Request Mode: Create multiple requests
                     for (const day of selectedDays) {
                         for (const session of selectedSessions) {
+                            // Fix: Define targetKey locally
                             const targetKey = `${day}_${session}`;
+
+                            // Resolve tStudent for student role (since targetId is currentUser.id)
+                            let studentObj = null;
+                            if (currentUser.role === 'student') {
+                                studentObj = studentsData.find(s => s.id === currentUser.id);
+                            } else {
+                                studentObj = studentsData.find(s => s.id === targetId);
+                            }
+
+                            const currentOrigin = (studentObj && studentObj.status && studentObj.status[targetKey]) ? studentObj.status[targetKey] : '實到';
+
                             const reqData = {
                                 studentId: targetId,
                                 studentName: targetName,
@@ -2395,7 +2855,7 @@
                                 dayName: day,
                                 sessionName: session,
                                 targetSession: targetKey,
-                                originStatus: "未知", // Batch implies we might overwrite diverse statuses
+                                originStatus: currentOrigin,
                                 newStatus: selectedStatus,
                                 status: 'pending',
                                 timestamp: new Date().toISOString()
@@ -2405,7 +2865,13 @@
                     }
                     await Promise.all(updates);
                     alert(`已送出 ${updates.length} 筆差勤申請，請通知幹部審核。`);
+                    await Promise.all(updates);
+                    alert(`已送出 ${updates.length} 筆差勤申請，請通知幹部審核。`);
 
+                    const timeDetails = [];
+                    for (const d of selectedDays) for (const s of selectedSessions) timeDetails.push(`${d} ${s}`);
+
+                    logAction('submit_request', { name: targetName }, `提交申請: ${timeDetails.join(', ')} -> ${selectedStatus}`);
                 } else {
                     // Direct Update Mode: Single updateDoc with multiple fields
                     const statusUpdates = {};
@@ -2417,6 +2883,13 @@
 
                     await updateDoc(doc(db, "students", targetId), statusUpdates);
                     alert(`更新成功！`);
+                    await updateDoc(doc(db, "students", targetId), statusUpdates);
+                    alert(`更新成功！`);
+
+                    const timeDetails = [];
+                    for (const d of selectedDays) for (const s of selectedSessions) timeDetails.push(`${d} ${s}`);
+
+                    logAction('batch_update', { name: targetName }, `快速差勤更新: ${timeDetails.join(', ')} -> ${selectedStatus}`);
                 }
 
                 bootstrap.Modal.getOrCreateInstance(document.getElementById('quickStatusModal')).hide();
